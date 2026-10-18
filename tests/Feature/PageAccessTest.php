@@ -58,9 +58,10 @@ class PageAccessTest extends TestCase
             ->assertSee(route('catalog'), false)
             ->assertSee(route('loans.mine'), false)
             ->assertSee(route('profile'), false);
-        foreach ([route('dashboard'), route('catalog'), route('catalog.lookup', 'qr-student-test'), route('loans.mine'), route('profile')] as $url) {
+        foreach ([route('dashboard'), route('catalog'), route('loans.mine'), route('profile')] as $url) {
             $this->get($url)->assertOk();
         }
+        $this->getJson(route('catalog.lookup', 'qr-student-test'))->assertOk();
     }
 
     public function test_student_dashboard_summary_counts_all_their_loans(): void

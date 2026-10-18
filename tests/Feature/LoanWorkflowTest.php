@@ -14,6 +14,27 @@ class LoanWorkflowTest extends TestCase
 {
     use RefreshDatabase;
 
+    public function test_catalog_qr_lookup_is_public_but_catalog_and_loan_submission_stay_protected(): void
+    {
+        $category = KategoriAlat::create(['nama_kategori' => 'Jaringan']);
+        $equipment = Alat::create([
+            'kode_alat' => 'QR-PUBLIC', 'nama_alat' => 'Alat QR Publik', 'id_kategori' => $category->id_kategori,
+            'stok_total' => 2, 'stok_tersedia' => 2, 'kondisi' => 'Baik', 'qr_code' => 'qr-public-test', 'status_alat' => 'Tersedia',
+        ]);
+
+        $this->getJson(route('catalog.lookup', $equipment->qr_code))
+            ->assertOk()
+            ->assertJsonPath('id_alat', $equipment->id_alat)
+            ->assertJsonPath('nama', 'Alat QR Publik')
+            ->assertJsonPath('stok', 2)
+            ->assertJsonMissingPath('peminjaman');
+
+        $this->get(route('catalog'))->assertRedirect(route('login'));
+        $this->post(route('loans.create'), [])->assertRedirect(route('login'));
+        $this->get(route('admin.returns.lookup', $equipment->qr_code))->assertRedirect(route('login'));
+        $this->assertSame(2, $equipment->fresh()->stok_tersedia);
+    }
+
     public function test_student_request_admin_approval_and_late_return_update_stock_and_fine(): void
     {
         $now = Carbon::now()->addDays(3)->setTime(12, 0);

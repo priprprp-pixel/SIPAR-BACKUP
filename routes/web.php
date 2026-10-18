@@ -18,6 +18,8 @@ Route::middleware('guest')->group(function () {
     Route::post('/daftar', [AuthController::class, 'store'])->name('register.store');
 });
 
+Route::get('/katalog/qr/{token}', [LoanController::class, 'lookupCatalogQr'])->name('catalog.lookup');
+
 Route::middleware('auth')->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     Route::get('/cari', [SearchController::class, 'index'])->name('search');
@@ -28,7 +30,6 @@ Route::middleware('auth')->group(function () {
 
     Route::middleware('role:siswa')->group(function () {
         Route::get('/katalog', [LoanController::class, 'catalog'])->name('catalog');
-        Route::get('/katalog/qr/{token}', [LoanController::class, 'lookupCatalogQr'])->name('catalog.lookup');
         Route::post('/pengajuan', [LoanController::class, 'create'])->name('loans.create');
         Route::get('/riwayat', [LoanController::class, 'mine'])->name('loans.mine');
     });

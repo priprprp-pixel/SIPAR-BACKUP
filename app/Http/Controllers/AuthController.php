@@ -58,6 +58,19 @@ class AuthController extends Controller
             'nis_nip' => ['required', 'string', 'max:30', 'unique:users,nis_nip'],
             'email' => ['required', 'email', 'max:255', 'unique:users,email'],
             'password' => ['required', 'string', 'min:8', 'confirmed'],
+        ], [
+            'nama.required' => 'Nama lengkap wajib diisi.',
+            'nama.max' => 'Nama lengkap maksimal 120 karakter.',
+            'nis_nip.required' => 'NIS wajib diisi.',
+            'nis_nip.max' => 'NIS maksimal 30 karakter.',
+            'nis_nip.unique' => 'NIS tersebut sudah terdaftar. Gunakan NIS lain atau masuk dengan akun yang sudah ada.',
+            'email.required' => 'Email wajib diisi.',
+            'email.email' => 'Format email belum benar.',
+            'email.max' => 'Email maksimal 255 karakter.',
+            'email.unique' => 'Email tersebut sudah terdaftar. Gunakan email lain atau masuk dengan akun yang sudah ada.',
+            'password.required' => 'Password wajib diisi.',
+            'password.min' => 'Password minimal 8 karakter.',
+            'password.confirmed' => 'Password dan ulangi password harus sama.',
         ]);
         $data['role'] = 'siswa';
 

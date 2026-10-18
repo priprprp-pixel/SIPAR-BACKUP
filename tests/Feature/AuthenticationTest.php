@@ -101,4 +101,43 @@ class AuthenticationTest extends TestCase
 
         $this->assertDatabaseHas('users', ['nis_nip' => '20260001', 'role' => 'siswa']);
     }
+
+    public function test_registration_explains_when_nis_or_email_is_already_registered(): void
+    {
+        User::factory()->create([
+            'nis_nip' => '20260003',
+            'email' => 'already.used@example.test',
+        ]);
+
+        $this->from(route('register'))->post(route('register.store'), [
+            'nama' => 'Siswa Duplikat',
+            'nis_nip' => '20260003',
+            'email' => 'already.used@example.test',
+            'password' => 'password123',
+            'password_confirmation' => 'password123',
+        ])->assertRedirect(route('register'))
+            ->assertSessionHasErrors(['nis_nip', 'email']);
+
+        $this->followingRedirects()->get(route('register'))
+            ->assertOk()
+            ->assertSee('NIS tersebut sudah terdaftar.')
+            ->assertSee('Email tersebut sudah terdaftar.');
+    }
+
+    public function test_registration_explains_invalid_email_and_mismatched_password(): void
+    {
+        $this->from(route('register'))->post(route('register.store'), [
+            'nama' => 'Siswa Data Tidak Valid',
+            'nis_nip' => '20260004',
+            'email' => 'bukan-email',
+            'password' => 'password123',
+            'password_confirmation' => 'password456',
+        ])->assertRedirect(route('register'))
+            ->assertSessionHasErrors(['email', 'password']);
+
+        $this->followingRedirects()->get(route('register'))
+            ->assertOk()
+            ->assertSee('Format email belum benar.')
+            ->assertSee('Password dan ulangi password harus sama.');
+    }
 }

@@ -41,7 +41,7 @@ Siswa juga dapat mendaftar sendiri melalui halaman masuk. Pendaftaran publik han
 
 ## Modul
 
-- Admin: dashboard, CRUD alat/kategori/akun siswa, QR unik per alat, approval/tolak pengajuan, pengembalian dengan pencarian token atau kamera, dan laporan.
+- Admin: dashboard, CRUD alat/kategori/akun siswa, QR unik per alat, approval/tolak pengajuan, pengembalian dengan pencarian token atau kamera. Pemindaian mengenali seluruh QR alat terdaftar dan menampilkan status/stok; formulir pengembalian hanya tersedia jika ada sisa transaksi aktif untuk alat tersebut. Modul juga menyediakan laporan.
 - Siswa: katalog dan pencarian QR, pengajuan dengan validasi stok, status/riwayat, profil, serta perubahan password.
 - Stok baru berkurang saat admin menyetujui pengajuan. Stok dikunci dan diperiksa ulang dalam transaksi database saat pengajuan diproses. Jumlah total direkonsiliasi sebagai tersedia, maintenance, rusak, dan sedang dipinjam.
 - Pengembalian dicatat per alat dan jumlah, sehingga satu transaksi multi-alat dapat dikembalikan bertahap. Status transaksi menjadi `Selesai` setelah seluruh jumlah item kembali. Kondisi `Baik` mengembalikan unit ke stok tersedia, `Rusak` memindahkan unit ke stok maintenance, dan `Hilang` mengurangi stok total. Denda keterlambatan Rp 5.000 per hari dibagi proporsional menurut jumlah item transaksi, dengan koreksi pembulatan saat item terakhir kembali.

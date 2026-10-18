@@ -59,7 +59,14 @@ class ReturnController extends Controller
             })
             ->values();
 
-        return response()->json(['alat' => $equipment->nama_alat, 'qr_code' => $equipment->qr_code, 'peminjaman' => $loans]);
+        return response()->json([
+            'alat' => $equipment->nama_alat,
+            'qr_code' => $equipment->qr_code,
+            'status' => $equipment->status_alat,
+            'stok_tersedia' => $equipment->stok_tersedia,
+            'stok_total' => $equipment->stok_total,
+            'peminjaman' => $loans,
+        ]);
     }
 
     public function store(Request $request): RedirectResponse

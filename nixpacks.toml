@@ -2,4 +2,4 @@
 providers = ['php', 'node']
 
 [phases.setup]
-nixPkgs = ['php82', 'php82Extensions.pdo_mysql', 'composer', 'nodejs_20']
+nixPkgs = ['php82', 'php82Extensions.pdo_mysql', 'php82Extensions.gd', 'composer', 'nodejs_20']

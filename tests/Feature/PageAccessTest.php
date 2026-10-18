@@ -61,6 +61,9 @@ class PageAccessTest extends TestCase
         foreach ([route('dashboard'), route('catalog'), route('loans.mine'), route('profile')] as $url) {
             $this->get($url)->assertOk();
         }
+        $this->get(route('catalog'))
+            ->assertSee('id="scanned-loan-form"', false)
+            ->assertSee('Kirim pengajuan alat ini');
         $this->getJson(route('catalog.lookup', 'qr-student-test'))->assertOk();
     }
 

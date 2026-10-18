@@ -8,13 +8,14 @@
 @empty<div class="col-12"><div class="surface p-5 text-center text-muted">Alat tidak ditemukan.</div></div>@endforelse</div>
 @if($equipment->count())<section class="surface p-3 p-md-4 mt-3"><div class="d-flex justify-content-between align-items-center mb-3"><div><h2 class="panel-title">Detail pengajuan</h2><div class="panel-subtitle">Pilih satu atau beberapa alat di atas.</div></div><span class="badge-status status-dipinjam" id="selected-count">0 alat dipilih</span></div><div class="row g-3"><div class="col-6 col-md-3"><label class="form-label">Tanggal pinjam</label><input class="form-control" type="date" name="tanggal_pinjam" min="{{ now()->toDateString() }}" value="{{ old('tanggal_pinjam') }}" required></div><div class="col-6 col-md-3"><label class="form-label">Rencana kembali</label><input class="form-control" type="date" name="tanggal_kembali_rencana" min="{{ now()->toDateString() }}" value="{{ old('tanggal_kembali_rencana') }}" required></div><div class="col-12 col-md-6"><label class="form-label">Keperluan</label><textarea class="form-control" name="keperluan" rows="2" required placeholder="Jelaskan keperluan alat praktik...">{{ old('keperluan') }}</textarea></div><div class="col-12 d-flex justify-content-end"><button class="btn btn-primary" type="submit"><i class="bi bi-send me-1"></i>Kirim pengajuan</button></div></div></section>@endif
 <div class="mt-3">{{ $equipment->links() }}</div></form>
-<div class="modal fade" id="scanModal" tabindex="-1"><div class="modal-dialog modal-dialog-centered"><div class="modal-content"><div class="modal-header"><h2 class="modal-title fs-6 fw-bold">Pindai QR alat</h2><button class="btn-close" data-bs-dismiss="modal" aria-label="Tutup"></button></div><div class="modal-body"><div id="student-reader" class="qr-box"></div><div id="scan-result" class="mt-3 text-center text-muted"></div></div></div></div></div>
+<div class="modal fade" id="scanModal" tabindex="-1"><div class="modal-dialog modal-dialog-centered modal-lg"><div class="modal-content"><div class="modal-header"><div><h2 class="modal-title fs-6 fw-bold">Pindai QR untuk Pengajuan</h2><div class="text-muted">Pindai alat, lalu lengkapi formulir pengajuan di bawah hasil scan.</div></div><button class="btn-close" data-bs-dismiss="modal" aria-label="Tutup"></button></div><div class="modal-body"><div id="student-reader" class="qr-box"></div><div id="scan-result" class="mt-3 text-center text-muted"></div><form class="d-none surface p-3 mt-3" method="post" action="{{ route('loans.create') }}" id="scanned-loan-form">@csrf<input type="hidden" name="id_alat" id="scanned-equipment-id"><div class="d-flex justify-content-between align-items-center mb-3"><div><h3 class="panel-title">Form pengajuan alat hasil scan</h3><div class="panel-subtitle" id="scanned-form-equipment"></div></div><span class="badge-status status-tersedia" id="scanned-form-stock"></span></div><div class="row g-3"><div class="col-6 col-md-3"><label class="form-label" for="scanned-quantity">Jumlah</label><input class="form-control" id="scanned-quantity" type="number" name="jumlah" min="1" value="1" required></div><div class="col-6 col-md-4"><label class="form-label" for="scanned-loan-date">Tanggal pinjam</label><input class="form-control" id="scanned-loan-date" type="date" name="tanggal_pinjam" min="{{ now()->toDateString() }}" value="{{ now()->toDateString() }}" required></div><div class="col-6 col-md-5"><label class="form-label" for="scanned-return-date">Rencana kembali</label><input class="form-control" id="scanned-return-date" type="date" name="tanggal_kembali_rencana" min="{{ now()->toDateString() }}" value="{{ now()->toDateString() }}" required></div><div class="col-12"><label class="form-label" for="scanned-purpose">Keperluan</label><textarea class="form-control" id="scanned-purpose" name="keperluan" rows="2" maxlength="2000" required placeholder="Jelaskan keperluan peminjaman alat..."></textarea></div><div class="col-12 d-flex justify-content-end"><button class="btn btn-primary" type="submit"><i class="bi bi-send me-1"></i>Kirim pengajuan alat ini</button></div></div></form></div></div></div></div>
 @endsection
 @push('scripts')
 <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
 <script>
 const studentReader = document.getElementById('student-reader');
 const catalogLookupUrl = @json(route('catalog.lookup', ['token' => '__TOKEN__'], false));
+const scannedLoanForm = document.getElementById('scanned-loan-form');
 let scanner;
 function updateSelectionCount() {
     const count = [...document.querySelectorAll('.equipment-select:checked')].length;
@@ -46,14 +47,25 @@ document.getElementById('scanModal').addEventListener('shown.bs.modal', async ()
             const stockElement = document.createElement('div');
             stockElement.textContent = `Stok: ${data.stok} · ${data.status}`;
             result.replaceChildren(nameElement, detailsElement, stockElement);
+            const canRequest = data.status === 'Tersedia' && Number(data.stok) > 0;
+            scannedLoanForm.classList.toggle('d-none', !canRequest);
+            if (canRequest) {
+                document.getElementById('scanned-equipment-id').value = data.id_alat;
+                document.getElementById('scanned-form-equipment').textContent = `${data.kode} · ${data.kategori}`;
+                document.getElementById('scanned-form-stock').textContent = `Stok tersedia: ${data.stok}`;
+                const quantity = document.getElementById('scanned-quantity');
+                quantity.max = data.stok;
+                quantity.value = 1;
+            } else {
+                const availabilityMessage = document.createElement('div');
+                availabilityMessage.className = 'alert alert-warning mt-2 mb-0';
+                availabilityMessage.textContent = 'Form pengajuan belum tersedia karena alat tidak memiliki stok yang dapat dipinjam.';
+                result.append(availabilityMessage);
+            }
             const selection = document.querySelector(`.equipment-select[data-equipment="${data.id_alat}"]`);
             if (selection && !selection.disabled) {
                 selection.checked = true;
                 selection.dispatchEvent(new Event('change'));
-                selection.closest('article').scrollIntoView({behavior:'smooth',block:'center'});
-            } else {
-                document.querySelector('input[name="q"]').value = data.kode;
-                document.querySelector('form[method="get"]').requestSubmit();
             }
         } catch (error) { result.textContent = error.message; }
     }); } catch { document.getElementById('scan-result').textContent = 'Izinkan akses kamera untuk memindai QR.'; }

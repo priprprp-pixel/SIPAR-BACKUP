@@ -35,6 +35,33 @@ class LoanWorkflowTest extends TestCase
         $this->assertSame(2, $equipment->fresh()->stok_tersedia);
     }
 
+    public function test_student_can_submit_a_single_item_request_from_the_scanned_qr_form(): void
+    {
+        $category = KategoriAlat::create(['nama_kategori' => 'Jaringan']);
+        $equipment = Alat::create([
+            'kode_alat' => 'QR-REQUEST', 'nama_alat' => 'Alat Pengajuan QR', 'id_kategori' => $category->id_kategori,
+            'stok_total' => 3, 'stok_tersedia' => 3, 'kondisi' => 'Baik', 'qr_code' => 'qr-request-test', 'status_alat' => 'Tersedia',
+        ]);
+        $student = User::factory()->create(['role' => 'siswa']);
+
+        $this->actingAs($student)->post(route('loans.create'), [
+            'id_alat' => $equipment->id_alat,
+            'jumlah' => 2,
+            'tanggal_pinjam' => now()->toDateString(),
+            'tanggal_kembali_rencana' => now()->addDays(2)->toDateString(),
+            'keperluan' => 'Praktik hasil scan QR',
+        ])->assertRedirect(route('loans.mine'));
+
+        $loan = Peminjaman::firstOrFail();
+        $this->assertDatabaseHas('detail_peminjaman', [
+            'id_peminjaman' => $loan->id_peminjaman,
+            'id_alat' => $equipment->id_alat,
+            'jumlah' => 2,
+        ]);
+        $this->assertSame('Pending', $loan->status);
+        $this->assertSame(3, $equipment->fresh()->stok_tersedia);
+    }
+
     public function test_student_request_admin_approval_and_late_return_update_stock_and_fine(): void
     {
         $now = Carbon::now()->addDays(3)->setTime(12, 0);

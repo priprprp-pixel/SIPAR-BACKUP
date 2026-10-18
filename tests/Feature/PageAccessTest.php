@@ -84,7 +84,7 @@ class PageAccessTest extends TestCase
             ->assertViewHas('myCompletedCount', 1);
     }
 
-    public function test_student_catalog_uses_the_forwarded_https_origin_for_qr_lookup(): void
+    public function test_student_catalog_uses_a_same_origin_qr_lookup_path(): void
     {
         $student = User::factory()->create(['role' => 'siswa']);
 
@@ -94,10 +94,11 @@ class PageAccessTest extends TestCase
             'X-Forwarded-Port' => '443',
         ])->get(route('catalog'))
             ->assertOk()
-            ->assertSee('https://sipar-production.up.railway.app/katalog/qr', false);
+            ->assertSee('\/katalog\/qr\/__TOKEN__', false)
+            ->assertDontSee('https://sipar-production.up.railway.app/katalog/qr', false);
     }
 
-    public function test_admin_return_scanner_uses_the_forwarded_https_origin_for_qr_lookup(): void
+    public function test_admin_return_scanner_uses_a_same_origin_qr_lookup_path(): void
     {
         $admin = User::factory()->create(['role' => 'admin']);
 
@@ -107,6 +108,7 @@ class PageAccessTest extends TestCase
             'X-Forwarded-Port' => '443',
         ])->get(route('admin.returns'))
             ->assertOk()
-            ->assertSee('https://sipar-production.up.railway.app/admin/pengembalian/qr', false);
+            ->assertSee('\/admin\/pengembalian\/qr\/__TOKEN__', false)
+            ->assertDontSee('https://sipar-production.up.railway.app/admin/pengembalian/qr', false);
     }
 }

@@ -15,6 +15,7 @@ const errorBox = document.getElementById('return-error');
 const resultBox = document.getElementById('return-result');
 const returnForm = document.getElementById('return-form');
 const emptyReturnMessage = document.getElementById('no-active-return');
+const returnLookupUrl = @json(route('admin.returns.lookup', ['token' => '__TOKEN__'], false));
 
 async function findReturn(token) {
     if (lookupInProgress) return;
@@ -25,9 +26,11 @@ async function findReturn(token) {
     emptyReturnMessage.classList.add('d-none');
 
     try {
-        const response = await fetch(`{{ url('/admin/pengembalian/qr') }}/${encodeURIComponent(token)}`, {
+        const response = await fetch(returnLookupUrl.replace('__TOKEN__', encodeURIComponent(token)), {
+            credentials: 'same-origin',
             headers: {Accept: 'application/json'},
         });
+        if (response.status === 401) throw new Error('Sesi login berakhir. Silakan masuk kembali, lalu pindai QR ulang.');
         const data = await response.json();
         if (!response.ok) throw new Error(data.message || 'QR tidak dikenali.');
 

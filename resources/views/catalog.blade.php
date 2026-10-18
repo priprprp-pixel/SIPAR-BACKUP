@@ -14,6 +14,7 @@
 <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
 <script>
 const studentReader = document.getElementById('student-reader');
+const catalogLookupUrl = @json(route('catalog.lookup', ['token' => '__TOKEN__'], false));
 let scanner;
 function updateSelectionCount() {
     const count = [...document.querySelectorAll('.equipment-select:checked')].length;
@@ -31,7 +32,11 @@ document.getElementById('scanModal').addEventListener('shown.bs.modal', async ()
         await scanner.stop();
         const result = document.getElementById('scan-result');
         try {
-            const response = await fetch(`{{ url('/katalog/qr') }}/${encodeURIComponent(token)}`, {headers:{Accept:'application/json'}});
+            const response = await fetch(catalogLookupUrl.replace('__TOKEN__', encodeURIComponent(token)), {
+                credentials: 'same-origin',
+                headers: {Accept: 'application/json'},
+            });
+            if (response.status === 401) throw new Error('Sesi login berakhir. Silakan masuk kembali, lalu pindai QR ulang.');
             const data = await response.json();
             if (!response.ok) throw new Error(data.message || 'QR tidak dikenali.');
             const nameElement = document.createElement('strong');

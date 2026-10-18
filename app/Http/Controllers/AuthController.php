@@ -28,7 +28,11 @@ class AuthController extends Controller
         $remember = $request->boolean('remember');
 
         if (! Auth::attempt([$column => $credentials['identity'], 'password' => $credentials['password']], $remember)) {
-            return back()->withErrors(['identity' => 'NIS/NIP atau password tidak cocok.'])->onlyInput('identity');
+            $message = $credentials['role'] === 'admin'
+                ? 'Username atau password tidak cocok.'
+                : 'NIS/NIP atau password tidak cocok.';
+
+            return back()->withErrors(['identity' => $message])->onlyInput('identity', 'role');
         }
 
         if (Auth::user()->role !== $credentials['role']) {

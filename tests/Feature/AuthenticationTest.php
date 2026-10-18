@@ -33,7 +33,34 @@ class AuthenticationTest extends TestCase
             ->assertOk()
             ->assertSee('Masukkan NIS atau email')
             ->assertSee('Daftar sebagai siswa')
+            ->assertSee('data-password-toggle', false)
             ->assertDontSee('Akun demo tersedia setelah menjalankan seeder.');
+    }
+
+    public function test_login_urls_follow_the_https_scheme_from_the_railway_proxy(): void
+    {
+        $this->withHeaders([
+            'X-Forwarded-Proto' => 'https',
+            'X-Forwarded-Host' => 'sipar-production.up.railway.app',
+            'X-Forwarded-Port' => '443',
+        ])->get(route('login'))
+            ->assertOk()
+            ->assertSee('action="https://sipar-production.up.railway.app/login"', false)
+            ->assertSee('href="https://sipar-production.up.railway.app/daftar"', false);
+    }
+
+    public function test_admin_login_error_uses_username_wording(): void
+    {
+        User::factory()->create(['role' => 'admin', 'nis_nip' => 'ADMIN-TEST']);
+
+        $this->from(route('login'))->followingRedirects()->post(route('login.store'), [
+            'identity' => 'ADMIN-TEST',
+            'password' => 'wrong-password',
+            'role' => 'admin',
+        ])->assertOk()
+            ->assertSee('Username atau password tidak cocok.')
+            ->assertSee('id="login-role" value="admin"', false)
+            ->assertSee('id="identity-label">Username</label>', false);
     }
 
     public function test_seeder_updates_existing_admin_to_requested_credentials(): void

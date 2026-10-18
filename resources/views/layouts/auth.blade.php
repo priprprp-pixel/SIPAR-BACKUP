@@ -40,6 +40,11 @@
         .auth-form .form-control{min-height:46px;padding:11px 13px;border:1px solid var(--auth-line);border-radius:7px;background:#fff;font-size:14px;color:var(--auth-ink)}
         .auth-form .form-control::placeholder{color:#8a9aa5}
         .auth-form .form-control:focus{border-color:#61a9e4;box-shadow:0 0 0 3px rgba(8,119,216,.13)}
+        .password-field{position:relative}
+        .password-field .form-control{width:100%}
+        .password-toggle{position:absolute;top:50%;right:7px;display:grid;width:34px;height:34px;place-items:center;transform:translateY(-50%);border:0;border-radius:6px;background:transparent;color:var(--auth-muted)}
+        .password-toggle:hover{background:var(--auth-surface);color:var(--auth-blue-dark)}
+        .password-toggle .bi{font-size:16px}
         .auth-form .form-check-input{width:16px;height:16px;margin-top:.1em}
         .auth-form .form-check-input:checked{background-color:var(--auth-blue);border-color:var(--auth-blue)}
         .auth-form .form-check-label,.auth-form .text-muted{font-size:12px;color:var(--auth-muted)!important}

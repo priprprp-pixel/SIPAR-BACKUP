@@ -13,7 +13,7 @@
         @if($errors->any())<div class="alert alert-danger py-2">{{ $errors->first() }}</div>@endif
         <div class="role-switch"><button class="{{ $selectedRole === 'siswa' ? 'active' : '' }}" type="button" data-role="siswa" aria-pressed="{{ $selectedRole === 'siswa' ? 'true' : 'false' }}"><i class="bi bi-person me-1"></i>Siswa</button><button class="{{ $selectedRole === 'admin' ? 'active' : '' }}" type="button" data-role="admin" aria-pressed="{{ $selectedRole === 'admin' ? 'true' : 'false' }}"><i class="bi bi-shield-lock me-1"></i>Admin / Toolman</button></div><input type="hidden" name="role" id="login-role" value="{{ $selectedRole }}">
         <label class="form-label" for="identity" id="identity-label">{{ $selectedRole === 'admin' ? 'Username' : 'NIS' }}</label><input class="form-control mb-3" id="identity" name="identity" value="{{ old('identity') }}" placeholder="{{ $selectedRole === 'admin' ? 'Masukkan username admin' : 'Masukkan NIS atau email' }}" autocomplete="username" required autofocus>
-        <label class="form-label" for="password">Password</label><input class="form-control mb-2" id="password" name="password" type="password" placeholder="Masukkan password" autocomplete="current-password" required>
+        <label class="form-label" for="password">Password</label><div class="password-field mb-2"><input class="form-control pe-5" id="password" name="password" type="password" placeholder="Masukkan password" autocomplete="current-password" required><button class="password-toggle" type="button" data-password-toggle aria-label="Tampilkan password" aria-pressed="false"><i class="bi bi-eye" aria-hidden="true"></i></button></div>
         <div class="login-options d-flex justify-content-between align-items-center mb-4"><label class="form-check-label text-muted"><input class="form-check-input me-1" name="remember" type="checkbox" value="1"> Ingat saya</label><span class="text-muted" id="login-support">{{ $selectedRole === 'admin' ? 'Kendala akses? Hubungi pengelola SIPAR.' : 'Lupa password? Hubungi wali kelas atau admin SIPAR.' }}</span></div>
         <button class="btn btn-primary w-100" type="submit">Masuk ke SIPAR <i class="bi bi-arrow-right ms-1"></i></button>
         <div class="help-note mt-3 {{ $selectedRole === 'admin' ? 'd-none' : '' }}" id="student-registration">Akun baru? <a href="{{ route('register') }}">Daftar sebagai siswa</a></div>
@@ -25,6 +25,8 @@ const identityLabel=document.getElementById('identity-label');
 const identityInput=document.getElementById('identity');
 const supportText=document.getElementById('login-support');
 const studentRegistration=document.getElementById('student-registration');
+const passwordInput=document.getElementById('password');
+const passwordToggle=document.querySelector('[data-password-toggle]');
 function selectLoginRole(role){
     const isAdmin=role==='admin';
     roleInput.value=role;
@@ -40,5 +42,13 @@ function selectLoginRole(role){
 }
 document.querySelectorAll('.role-switch button').forEach(button=>button.addEventListener('click',()=>selectLoginRole(button.dataset.role)));
 selectLoginRole(roleInput.value);
+passwordToggle.addEventListener('click',()=>{
+    const showPassword=passwordInput.type==='password';
+    passwordInput.type=showPassword?'text':'password';
+    passwordToggle.setAttribute('aria-label',showPassword?'Sembunyikan password':'Tampilkan password');
+    passwordToggle.setAttribute('aria-pressed',String(showPassword));
+    passwordToggle.querySelector('i').classList.toggle('bi-eye',!showPassword);
+    passwordToggle.querySelector('i').classList.toggle('bi-eye-slash',showPassword);
+});
 </script>
 @endsection

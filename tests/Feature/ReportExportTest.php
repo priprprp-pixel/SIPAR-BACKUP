@@ -110,7 +110,7 @@ class ReportExportTest extends TestCase
             $this->assertSame('LAN Tester Export x 2', $sheet->getCell('D2')->getValue());
             $this->assertEquals(2, $sheet->getCell('E2')->getValue());
             $this->assertSame('2026-10-15', $sheet->getCell('F2')->getValue());
-            $this->assertSame('Approved', $sheet->getCell('H2')->getValue());
+            $this->assertSame('Disetujui', $sheet->getCell('H2')->getValue());
             $this->assertSame('2026-10-16 14:30', $sheet->getCell('I2')->getValue());
             $this->assertEquals(2500, $sheet->getCell('J2')->getValue());
             $this->assertSame('Catatan export', $sheet->getCell('K2')->getValue());

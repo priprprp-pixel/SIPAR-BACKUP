@@ -84,7 +84,7 @@ class ReportController extends Controller
                 'alat' => $equipment !== '' ? $equipment : '-',
                 'tanggal_pinjam' => $loan->tanggal_pinjam?->format('d/m/Y') ?? '-',
                 'tanggal_kembali_rencana' => $loan->tanggal_kembali_rencana?->format('d/m/Y') ?? '-',
-                'status' => $loan->status ?? '-',
+                'status' => $loan->status_label ?? '-',
                 'tanggal_kembali_aktual' => $latestReturn?->format('d/m/Y H:i') ?? '-',
                 'denda' => number_format((float) $fine, 0, ',', '.'),
             ];

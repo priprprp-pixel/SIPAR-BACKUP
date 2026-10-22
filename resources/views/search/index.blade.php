@@ -43,7 +43,7 @@
                 @forelse($loans as $loan)
                     <div class="d-flex flex-wrap justify-content-between gap-2 border-bottom py-2">
                         <div>
-                            <strong>PJM-{{ str_pad($loan->id_peminjaman, 5, '0', STR_PAD_LEFT) }} · {{ $loan->status }}</strong>
+                            <strong>PJM-{{ str_pad($loan->id_peminjaman, 5, '0', STR_PAD_LEFT) }} · {{ $loan->status_label }}</strong>
                             <div class="panel-subtitle">{{ $loan->detail->pluck('alat.nama_alat')->filter()->join(', ') ?: $loan->keperluan }}</div>
                             @if($isAdmin)<div class="panel-subtitle">{{ $loan->user?->nama }} · {{ $loan->user?->nis_nip }}</div>@endif
                         </div>

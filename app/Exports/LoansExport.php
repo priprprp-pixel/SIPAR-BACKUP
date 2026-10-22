@@ -48,7 +48,7 @@ class LoansExport implements FromCollection, ShouldAutoSize, WithHeadings
                 $details->sum('jumlah'),
                 $loan->tanggal_pinjam?->format('Y-m-d') ?? '-',
                 $loan->tanggal_kembali_rencana?->format('Y-m-d') ?? '-',
-                $loan->status ?? '-',
+                $loan->status_label ?? '-',
                 $latestReturn?->format('Y-m-d H:i') ?? '-',
                 (float) $fine,
                 $loan->catatan_admin ?? $loan->pengembalian?->catatan ?? '-',

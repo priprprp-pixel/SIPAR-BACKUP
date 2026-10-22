@@ -18,6 +18,15 @@ class Peminjaman extends Model
 
     protected $casts = ['tanggal_pengajuan' => 'datetime', 'tanggal_pinjam' => 'date', 'tanggal_kembali_rencana' => 'date'];
 
+    public function getStatusLabelAttribute(): string
+    {
+        return [
+            'Pending' => 'Menunggu Konfirmasi',
+            'Approved' => 'Disetujui',
+            'Rejected' => 'Ditolak',
+        ][$this->status] ?? ($this->status ?? '-');
+    }
+
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class, 'id_user', 'id_user');

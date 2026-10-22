@@ -88,6 +88,49 @@ class PageAccessTest extends TestCase
             ->assertViewHas('myCompletedCount', 1);
     }
 
+    public function test_loan_status_labels_are_localized_without_changing_stored_values(): void
+    {
+        $student = User::factory()->create(['role' => 'siswa']);
+        $statuses = ['Pending', 'Approved', 'Rejected'];
+
+        foreach ($statuses as $status) {
+            Peminjaman::create([
+                'id_user' => $student->id_user,
+                'tanggal_pinjam' => now()->toDateString(),
+                'tanggal_kembali_rencana' => now()->addDay()->toDateString(),
+                'keperluan' => 'Status localization test',
+                'status' => $status,
+            ]);
+        }
+
+        $this->actingAs($student)->get(route('dashboard'))
+            ->assertOk()
+            ->assertSee('Menunggu Konfirmasi')
+            ->assertSee('Disetujui')
+            ->assertSee('Ditolak');
+        $this->get(route('loans.mine'))
+            ->assertOk()
+            ->assertSee('Menunggu Konfirmasi')
+            ->assertSee('Disetujui')
+            ->assertSee('Ditolak');
+
+        $admin = User::factory()->create(['role' => 'admin']);
+        $this->actingAs($admin)->get(route('admin.approvals'))
+            ->assertOk()
+            ->assertSee('Menunggu Konfirmasi')
+            ->assertSee('Disetujui');
+        $this->get(route('admin.reports'))
+            ->assertOk()
+            ->assertSee('value="Pending"', false)
+            ->assertSee('value="Approved"', false)
+            ->assertSee('value="Rejected"', false)
+            ->assertSee('Menunggu Konfirmasi')
+            ->assertSee('Disetujui')
+            ->assertSee('Ditolak');
+
+        $this->assertSame($statuses, Peminjaman::orderBy('id_peminjaman')->pluck('status')->all());
+    }
+
     public function test_student_catalog_uses_a_same_origin_qr_lookup_path(): void
     {
         $student = User::factory()->create(['role' => 'siswa']);

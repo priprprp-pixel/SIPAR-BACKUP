@@ -305,7 +305,7 @@ class LoanWorkflowTest extends TestCase
 
         $this->actingAs($admin)->getJson(route('admin.returns.lookup', 'qr-tidak-dikenal'))
             ->assertNotFound()
-            ->assertJsonPath('message', 'QR alat tidak ditemukan.');
+            ->assertJsonPath('message', 'Alat tidak ditemukan. Periksa QR atau kode alat.');
 
         $this->getJson(route('admin.returns.lookup', 'qr-no-loan'))
             ->assertOk()
@@ -317,7 +317,7 @@ class LoanWorkflowTest extends TestCase
 
         $this->get(route('admin.returns'))
             ->assertOk()
-            ->assertSee('QR alat dikenali, tetapi tidak ada sisa transaksi peminjaman aktif', false);
+            ->assertSee('Alat ditemukan, tetapi tidak ada sisa transaksi peminjaman aktif', false);
     }
 
     public function test_student_cannot_open_admin_routes(): void

@@ -27,9 +27,14 @@ class ReturnController extends Controller
 
     public function lookup(string $token): JsonResponse
     {
-        $equipment = Alat::where('qr_code', $token)->first();
+        $lookupColumn = config('app.enable_qr_scanner') ? 'qr_code' : 'kode_alat';
+        $equipment = Alat::where($lookupColumn, $token)->first();
         if (! $equipment) {
-            return response()->json(['message' => 'QR alat tidak ditemukan.'], 404);
+            return response()->json([
+                'message' => config('app.enable_qr_scanner')
+                    ? 'QR alat tidak ditemukan.'
+                    : 'Kode alat tidak ditemukan.',
+            ], 404);
         }
 
         $loans = Peminjaman::with(['user', 'detail.alat', 'detail.pengembalianDetail'])
@@ -59,18 +64,30 @@ class ReturnController extends Controller
             })
             ->values();
 
-        return response()->json([
+        $response = [
             'alat' => $equipment->nama_alat,
-            'qr_code' => $equipment->qr_code,
+            'kode_alat' => $equipment->kode_alat,
             'status' => $equipment->status_alat,
             'stok_tersedia' => $equipment->stok_tersedia,
             'stok_total' => $equipment->stok_total,
             'peminjaman' => $loans,
-        ]);
+        ];
+        if (config('app.enable_qr_scanner')) {
+            $response['qr_code'] = $equipment->qr_code;
+        }
+
+        return response()->json($response);
     }
 
     public function store(Request $request): RedirectResponse
     {
+        if (! config('app.enable_qr_scanner') && $request->filled('kode_alat')) {
+            $equipment = Alat::where('kode_alat', $request->input('kode_alat'))->first();
+            if ($equipment) {
+                $request->merge(['qr_code' => $equipment->qr_code]);
+            }
+        }
+
         $data = $request->validate([
             'id_peminjaman' => ['required', 'integer', 'exists:peminjaman,id_peminjaman'],
             'id_detail' => ['nullable', 'integer', 'exists:detail_peminjaman,id_detail'],

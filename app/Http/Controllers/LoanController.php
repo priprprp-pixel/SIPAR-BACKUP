@@ -26,7 +26,8 @@ class LoanController extends Controller
 
     public function lookupCatalogQr(string $token): JsonResponse
     {
-        $equipment = Alat::with('kategori')->where('qr_code', $token)->first();
+        $lookupColumn = config('app.enable_qr_scanner') ? 'qr_code' : 'kode_alat';
+        $equipment = Alat::with('kategori')->where($lookupColumn, $token)->first();
         if (! $equipment) {
             return response()->json(['message' => 'Alat tidak ditemukan.'], 404);
         }

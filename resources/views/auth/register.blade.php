@@ -2,7 +2,7 @@
 @section('title', 'Daftar Siswa')
 @section('content')
 <div class="auth-frame">
-    <aside class="auth-aside"><a class="brand" href="{{ route('login') }}"><span class="brand-mark"><i class="bi bi-box-seam"></i></span><span>SIPAR<small>Peminjaman Alat RPL</small></span></a><div class="aside-copy"><small>AKUN SISWA</small><h1>Mulai dari satu akun.</h1><p>Gunakan identitas sekolah untuk mengajukan peminjaman alat praktik RPL.</p></div><div class="aside-foot">SMK Negeri 5 Surakarta</div></aside>
+    <aside class="auth-aside"><a class="brand" href="{{ route('login') }}"><img class="brand-logo" src="{{ asset('assets/logo.png') }}" alt="Logo SIPAR"><span>SIPAR<small>Peminjaman Alat RPL</small></span></a><div class="aside-copy"><small>AKUN SISWA</small><h1>Mulai dari satu akun.</h1><p>Gunakan identitas sekolah untuk mengajukan peminjaman alat praktik RPL.</p></div><div class="aside-foot">SMK Negeri 5 Surakarta</div></aside>
     <main class="auth-main"><form class="auth-form" method="post" action="{{ route('register.store') }}">
         @csrf<h2>Daftar akun siswa</h2><p>Lengkapi data sekolah untuk melanjutkan.</p>
         @if($errors->any())<div class="alert alert-danger py-2" role="alert"><div class="fw-semibold mb-1">Pendaftaran belum berhasil:</div><ul class="mb-0 ps-3">@foreach($errors->all() as $error)<li>{{ $error }}</li>@endforeach</ul></div>@endif

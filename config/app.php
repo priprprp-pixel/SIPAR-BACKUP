@@ -54,6 +54,8 @@ return [
 
     'url' => env('APP_URL', 'http://localhost'),
 
+    'enable_qr_scanner' => env('ENABLE_QR_SCANNER', true),
+
     /*
     |--------------------------------------------------------------------------
     | Application Timezone

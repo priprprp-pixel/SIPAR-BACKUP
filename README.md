@@ -14,13 +14,14 @@ Sistem Informasi Peminjaman Alat RPL SMK Negeri 5 Surakarta. Aplikasi Laravel 12
    ```
 
 3. Buat database MySQL bernama `sipar`, lalu atur `DB_DATABASE`, `DB_USERNAME`, dan `DB_PASSWORD` pada `.env`.
-4. Jalankan migrasi dan data awal:
+4. Atur `ENABLE_QR_SCANNER=true` pada `.env` untuk mengaktifkan kamera QR, atau `ENABLE_QR_SCANNER=false` untuk menggantinya dengan pencarian manual menggunakan `kode_alat`. Setelah mengubah nilai pada deployment yang memakai config cache, jalankan `php artisan config:clear` atau bangun ulang cache konfigurasi.
+5. Jalankan migrasi dan data awal:
 
    ```powershell
    php artisan migrate --seed
    ```
 
-5. Jalankan aplikasi:
+6. Jalankan aplikasi:
 
    ```powershell
    php artisan serve

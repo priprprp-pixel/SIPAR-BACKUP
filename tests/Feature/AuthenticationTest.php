@@ -32,6 +32,9 @@ class AuthenticationTest extends TestCase
         $this->get(route('login'))
             ->assertOk()
             ->assertSee('Masukkan NIS atau email')
+            ->assertSee('Lupa password? Hubungi Admin SIPAR.')
+            ->assertSee('login-options d-flex justify-content-between align-items-center', false)
+            ->assertSee('text-muted whitespace-nowrap', false)
             ->assertSee('Daftar sebagai siswa')
             ->assertSee('data-password-toggle', false)
             ->assertDontSee('Akun demo tersedia setelah menjalankan seeder.');
@@ -60,7 +63,9 @@ class AuthenticationTest extends TestCase
         ])->assertOk()
             ->assertSee('Username atau password tidak cocok.')
             ->assertSee('id="login-role" value="admin"', false)
-            ->assertSee('id="identity-label">Username</label>', false);
+            ->assertSee('id="identity-label">Username</label>', false)
+            ->assertDontSee('Kendala akses? Hubungi pengelola SIPAR.')
+            ->assertSee('id="login-support"></span>', false);
     }
 
     public function test_seeder_updates_existing_admin_to_requested_credentials(): void

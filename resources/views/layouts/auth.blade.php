@@ -8,7 +8,7 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
     <style>
-        :root{--ink:#102334;--muted:#72808d;--line:#e1e8ed;--blue:#0868ce}*{box-sizing:border-box}body{min-height:100vh;margin:0;background:#eef3f6;font:14px 'DM Sans',sans-serif;color:var(--ink);display:grid;place-items:center;padding:0}.auth-frame{width:100%;min-height:100vh;background:#fff;display:grid;grid-template-columns:1fr 1fr;border:0;border-radius:0;overflow:hidden;box-shadow:none}.auth-aside{background:#102334;color:#fff;padding:clamp(28px,6vw,84px);display:flex;flex-direction:column;justify-content:space-between;position:relative;overflow:hidden}.auth-aside:after{content:'';position:absolute;width:310px;height:310px;right:-125px;bottom:-145px;border:1px solid #ffffff20;border-radius:50%;box-shadow:0 0 0 30px #ffffff08,0 0 0 60px #ffffff06}.brand{font:800 15px Manrope;color:#fff;text-decoration:none;display:flex;align-items:center;gap:10px}.brand small{display:block;font:400 10px 'DM Sans';color:#9eafbd}.brand-mark{width:35px;height:35px;background:#0874e3;border-radius:9px;display:grid;place-items:center}.aside-copy{position:relative;z-index:1;max-width:355px}.aside-copy small{font-size:10px;color:#9eb3c3}.aside-copy h1{font:800 28px/1.2 Manrope;margin:16px 0}.aside-copy p{font-size:12px;color:#b1c0ca;line-height:1.7}.aside-foot{font-size:10px;color:#8ca1b2;border-top:1px solid #ffffff20;padding-top:16px}.auth-main{padding:42px;display:grid;place-items:center}.auth-form{width:min(100%,340px)}.auth-form h2{font:800 22px Manrope;margin:0 0 5px}.auth-form>p{font-size:11px;color:var(--muted);margin-bottom:22px}.form-label{font-size:11px;font-weight:600}.form-control,.form-select{font-size:12px;border-color:var(--line);padding:10px;border-radius:6px}.btn-primary{font-size:12px;font-weight:700;background:var(--blue);border-color:var(--blue);padding:10px}.role-switch{display:grid;grid-template-columns:1fr 1fr;background:#f2f5f7;border-radius:6px;padding:3px;margin-bottom:18px}.role-switch a{color:#687987;text-decoration:none;text-align:center;padding:7px;font-size:11px;border-radius:5px}.role-switch a.active{background:#fff;color:var(--ink);box-shadow:0 1px 3px #15283c15}.help-note{background:#f5f8fa;border:1px solid var(--line);border-radius:6px;padding:10px;font-size:10px;color:var(--muted)}.alert{font-size:12px}
+        :root{--ink:#102334;--muted:#72808d;--line:#e1e8ed;--blue:#0868ce}*{box-sizing:border-box}body{min-height:100vh;margin:0;background:#eef3f6;font:14px 'DM Sans',sans-serif;color:var(--ink);display:grid;place-items:center;padding:0}.auth-frame{width:100%;min-height:100vh;background:#fff;display:grid;grid-template-columns:1fr 1fr;border:0;border-radius:0;overflow:hidden;box-shadow:none}.auth-aside{background:#102334;color:#fff;padding:clamp(28px,6vw,84px);display:flex;flex-direction:column;justify-content:space-between;position:relative;overflow:hidden}.auth-aside:after{content:'';position:absolute;width:310px;height:310px;right:-125px;bottom:-145px;border:1px solid #ffffff20;border-radius:50%;box-shadow:0 0 0 30px #ffffff08,0 0 0 60px #ffffff06}.brand{font:800 15px Manrope;color:#fff;text-decoration:none;display:flex;align-items:center;gap:10px}.brand-logo{width:40px;height:40px;object-fit:contain;flex:none}.brand small{display:block;font:400 10px 'DM Sans';color:#9eafbd}.brand-mark{width:35px;height:35px;background:#0874e3;border-radius:9px;display:grid;place-items:center}.aside-copy{position:relative;z-index:1;max-width:355px}.aside-copy small{font-size:10px;color:#9eb3c3}.aside-copy h1{font:800 28px/1.2 Manrope;margin:16px 0}.aside-copy p{font-size:12px;color:#b1c0ca;line-height:1.7}.aside-foot{font-size:10px;color:#8ca1b2;border-top:1px solid #ffffff20;padding-top:16px}.auth-main{padding:42px;display:grid;place-items:center}.auth-form{width:min(100%,340px)}.auth-form h2{font:800 22px Manrope;margin:0 0 5px}.auth-form>p{font-size:11px;color:var(--muted);margin-bottom:22px}.form-label{font-size:11px;font-weight:600}.form-control,.form-select{font-size:12px;border-color:var(--line);padding:10px;border-radius:6px}.btn-primary{font-size:12px;font-weight:700;background:var(--blue);border-color:var(--blue);padding:10px}.role-switch{display:grid;grid-template-columns:1fr 1fr;background:#f2f5f7;border-radius:6px;padding:3px;margin-bottom:18px}.role-switch a{color:#687987;text-decoration:none;text-align:center;padding:7px;font-size:11px;border-radius:5px}.role-switch a.active{background:#fff;color:var(--ink);box-shadow:0 1px 3px #15283c15}.help-note{background:#f5f8fa;border:1px solid var(--line);border-radius:6px;padding:10px;font-size:10px;color:var(--muted)}.alert{font-size:12px}
         @media(max-width:700px){body{padding:0;background:#fff;place-items:stretch}.auth-frame{border:0;border-radius:0;min-height:100vh;grid-template-columns:1fr;box-shadow:none}.auth-aside{min-height:190px;padding:22px 24px}.auth-aside .aside-copy{margin-top:28px}.aside-copy h1{font-size:20px;margin:8px 0}.aside-copy p,.aside-foot{display:none}.auth-main{padding:30px 24px;align-items:start}.auth-form{width:100%;max-width:410px}}
     </style>
     <style>
@@ -21,7 +21,7 @@
         .auth-aside>.brand,.auth-aside>.aside-copy,.auth-aside>.aside-foot{position:relative;z-index:1}
         .brand{gap:12px;padding-bottom:0;font-size:16px}
         .auth-aside .brand small{font:500 10px/1.35 'DM Sans',sans-serif;color:#fff;text-shadow:0 1px 8px rgba(4,20,29,.6)}
-        .brand-mark{width:40px;height:40px;border-radius:10px;background:#0877d8}
+        .brand-logo{width:44px;height:44px}
         .aside-copy{max-width:480px}
         .aside-copy small{display:block;max-width:100%;font-size:11px;font-weight:700;line-height:1.55;color:#fff;text-shadow:0 1px 8px rgba(4,20,29,.65)}
         .aside-copy h1{max-width:440px;font:700 36px/1.16 Manrope,sans-serif;margin:17px 0 12px;text-shadow:0 2px 14px rgba(4,20,29,.44)}
@@ -48,8 +48,13 @@
         .auth-form .form-check-input{width:16px;height:16px;margin-top:.1em}
         .auth-form .form-check-input:checked{background-color:var(--auth-blue);border-color:var(--auth-blue)}
         .auth-form .form-check-label,.auth-form .text-muted{font-size:12px;color:var(--auth-muted)!important}
-        .login-options{gap:12px}
-        .login-options #login-support{max-width:62%;font-weight:600;line-height:1.45;text-align:right}
+        .login-options{display:flex;justify-content:space-between;align-items:center;gap:8px;min-height:48px}
+        .login-remember{display:flex;align-items:center;gap:6px;margin:0;white-space:nowrap}
+        .login-options .form-check-input{flex:none;margin:0}
+        .whitespace-nowrap{white-space:nowrap}
+        .login-options #login-support{flex:none;max-width:none;font-weight:600;line-height:1.4;text-align:right}
+        .student-registration-slot{height:50px;margin-top:12px}
+        .student-registration-slot .help-note{margin:0}
         .auth-form .btn-primary{min-height:46px;border:0;border-radius:7px;background:var(--auth-blue);font-size:13px;box-shadow:0 4px 10px rgba(8,119,216,.15)}
         .auth-form .btn-primary:hover{background:var(--auth-blue-dark)}
         .help-note{padding:12px 13px;border:1px solid #e4ebef;border-radius:7px;background:#f7f9fa;color:#687b87;font-size:11px;line-height:1.6}
@@ -78,15 +83,15 @@
             .auth-form h2{font-size:22px}
             .auth-form>p{font-size:12px;margin:6px 0 20px}
             .role-switch button{font-size:12px}
-            .login-options{align-items:flex-start!important;gap:8px;margin-bottom:20px!important}
-            .login-options #login-support{max-width:68%;font-size:11px;text-align:left}
+            .login-options{align-items:center;gap:8px;margin-bottom:20px!important}
+            .login-options #login-support{font-size:11px;text-align:right}
         }
         @media(max-width:380px){
             .auth-aside{min-height:226px;padding-right:18px;padding-left:18px}
             .auth-main{padding-right:12px;padding-left:12px}
             .auth-form{padding:20px}
             .role-switch button{padding-right:6px;padding-left:6px;font-size:11px}
-            .auth-form .text-muted{font-size:11px}
+            .login-options #login-support{font-size:10px}
         }
         @media(max-width:767.98px) and (max-height:640px){
             .auth-aside{min-height:205px;padding-top:16px;padding-bottom:18px}

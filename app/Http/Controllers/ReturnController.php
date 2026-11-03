@@ -29,11 +29,17 @@ class ReturnController extends Controller
         return view('admin.returns', compact('activeLoans'));
     }
 
-    public function lookup(string $token): JsonResponse
+    public function search(Request $request): JsonResponse
     {
-        $equipment = Alat::where('qr_code', $token)->orWhere('kode_alat', $token)->first();
+        $term = $request->string('q')->trim()->toString();
+        if ($term === '') {
+            return response()->json(['message' => 'Masukkan kode atau nama alat.'], 422);
+        }
+        $equipment = Alat::where('kode_alat', $term)
+            ->orWhere('nama_alat', 'like', '%'.$term.'%')
+            ->first();
         if (! $equipment) {
-            return response()->json(['message' => 'Alat tidak ditemukan. Periksa QR atau kode alat.'], 404);
+            return response()->json(['message' => 'Alat tidak ditemukan. Gunakan kode atau nama alat yang benar.'], 404);
         }
 
         $loansQuery = Peminjaman::with(['user', 'detail.alat', 'detail.pengembalianDetail', 'detail.itemUnits'])
@@ -74,7 +80,6 @@ class ReturnController extends Controller
         $response = [
             'alat' => $equipment->nama_alat,
             'kode_alat' => $equipment->kode_alat,
-            'qr_code' => $equipment->qr_code,
             'status' => $equipment->status_alat,
             'stok_tersedia' => $equipment->stok_tersedia,
             'stok_total' => $equipment->stok_total,
@@ -94,8 +99,7 @@ class ReturnController extends Controller
             'id_detail' => ['nullable', 'integer', 'exists:detail_peminjaman,id_detail'],
             'item_unit_id' => ['nullable', 'integer', 'exists:item_units,item_unit_id'],
             'jumlah' => ['nullable', 'integer', 'min:1', 'max:10000'],
-            'qr_code' => ['nullable', 'required_without:kode_alat', 'string', 'exists:alat,qr_code'],
-            'kode_alat' => ['nullable', 'required_without:qr_code', 'string', 'exists:alat,kode_alat'],
+            'kode_alat' => ['required', 'string', 'exists:alat,kode_alat'],
             'tanggal_kembali_aktual' => ['nullable', 'date'],
             'kondisi_alat' => ['required', 'in:Baik,Maintenance,Rusak,Hilang'],
             'foto_bukti' => $photoRules,
@@ -104,10 +108,7 @@ class ReturnController extends Controller
         if ($request->hasFile('foto_bukti')) {
             $data['foto_bukti'] = $request->file('foto_bukti')->store('bukti/pengembalian', 'public');
         }
-        $equipment = isset($data['qr_code'])
-            ? Alat::where('qr_code', $data['qr_code'])->firstOrFail()
-            : Alat::where('kode_alat', $data['kode_alat'])->firstOrFail();
-        $data['qr_code'] = $equipment->qr_code;
+        $equipment = Alat::where('kode_alat', $data['kode_alat'])->firstOrFail();
 
         $fine = 0;
         $completed = false;
@@ -118,14 +119,14 @@ class ReturnController extends Controller
                 if ($loan->status !== 'Approved' || $loan->pengembalian()->exists()) {
                     throw ValidationException::withMessages(['id_peminjaman' => 'Transaksi ini sudah selesai atau tidak sedang dipinjam.']);
                 }
-                $scannedEquipment = Alat::where('qr_code', $data['qr_code'])->lockForUpdate()->firstOrFail();
-                $detailQuery = $loan->detail()->where('id_alat', $scannedEquipment->id_alat);
+                $equipment = Alat::where('kode_alat', $data['kode_alat'])->lockForUpdate()->firstOrFail();
+                $detailQuery = $loan->detail()->where('id_alat', $equipment->id_alat);
                 if (! empty($data['id_detail'])) {
                     $detailQuery->where('id_detail', $data['id_detail']);
                 }
                 $detail = $detailQuery->lockForUpdate()->first();
                 if (! $detail) {
-                    throw ValidationException::withMessages(['qr_code' => 'QR alat tidak sesuai dengan item pada transaksi ini.']);
+                    throw ValidationException::withMessages(['kode_alat' => 'Kode alat tidak sesuai dengan item pada transaksi ini.']);
                 }
                 $assignedUnits = $detail->itemUnits()->where('status', 'Dipinjam')->lockForUpdate()->get();
                 $hasAssignedUnits = $assignedUnits->isNotEmpty();
@@ -199,21 +200,21 @@ class ReturnController extends Controller
                     ]);
                 }
 
-                $scannedEquipment->refresh();
+                $equipment->refresh();
                 if ($data['kondisi_alat'] === 'Baik') {
-                    $scannedEquipment->stok_tersedia += $quantity;
+                    $equipment->stok_tersedia += $quantity;
                 } elseif ($data['kondisi_alat'] === 'Maintenance' || $data['kondisi_alat'] === 'Rusak') {
-                    $scannedEquipment->stok_maintenance += $quantity;
+                    $equipment->stok_maintenance += $quantity;
                     if ($data['kondisi_alat'] === 'Rusak') {
-                        $scannedEquipment->kondisi = 'Rusak';
+                        $equipment->kondisi = 'Rusak';
                     }
                 } elseif ($data['kondisi_alat'] === 'Hilang') {
-                    $scannedEquipment->stok_total = max(0, $scannedEquipment->stok_total - $quantity);
+                    $equipment->stok_total = max(0, $equipment->stok_total - $quantity);
                 } else {
-                    $scannedEquipment->stok_total = max(0, $scannedEquipment->stok_total - $quantity);
+                    $equipment->stok_total = max(0, $equipment->stok_total - $quantity);
                 }
-                $scannedEquipment->syncStatusFromStock();
-                $scannedEquipment->save();
+                $equipment->syncStatusFromStock();
+                $equipment->save();
 
                 $completed = $willComplete;
                 if ($completed) {

@@ -33,7 +33,7 @@ class PageAccessTest extends TestCase
             ->assertSee(route('admin.reports'), false);
         foreach ([
             route('dashboard'), route('admin.equipment'), route('admin.categories'), route('admin.students'),
-            route('admin.approvals'), route('admin.returns'), route('admin.returns.lookup', 'qr-admin-test'),
+            route('admin.approvals'), route('admin.returns'),
             route('admin.reports'), route('admin.reports.xlsx'), route('profile'),
         ] as $url) {
             $this->get($url)->assertOk();
@@ -62,9 +62,8 @@ class PageAccessTest extends TestCase
             $this->get($url)->assertOk();
         }
         $this->get(route('catalog'))
-            ->assertSee('id="scanned-loan-form"', false)
-            ->assertSee('Kirim pengajuan alat ini');
-        $this->getJson(route('catalog.lookup', 'qr-student-test'))->assertOk();
+            ->assertSee('id="loan-modal-form"', false)
+            ->assertSee('Kirim pengajuan');
     }
 
     public function test_student_dashboard_summary_counts_all_their_loans(): void
@@ -131,31 +130,4 @@ class PageAccessTest extends TestCase
         $this->assertSame($statuses, Peminjaman::orderBy('id_peminjaman')->pluck('status')->all());
     }
 
-    public function test_student_catalog_uses_a_same_origin_qr_lookup_path(): void
-    {
-        $student = User::factory()->create(['role' => 'siswa']);
-
-        $this->actingAs($student)->withHeaders([
-            'X-Forwarded-Proto' => 'https',
-            'X-Forwarded-Host' => 'sipar-production.up.railway.app',
-            'X-Forwarded-Port' => '443',
-        ])->get(route('catalog'))
-            ->assertOk()
-            ->assertSee('\/katalog\/qr\/__TOKEN__', false)
-            ->assertDontSee('https://sipar-production.up.railway.app/katalog/qr', false);
-    }
-
-    public function test_admin_return_scanner_uses_a_same_origin_qr_lookup_path(): void
-    {
-        $admin = User::factory()->create(['role' => 'admin']);
-
-        $this->actingAs($admin)->withHeaders([
-            'X-Forwarded-Proto' => 'https',
-            'X-Forwarded-Host' => 'sipar-production.up.railway.app',
-            'X-Forwarded-Port' => '443',
-        ])->get(route('admin.returns'))
-            ->assertOk()
-            ->assertSee('\/admin\/pengembalian\/qr\/__TOKEN__', false)
-            ->assertDontSee('https://sipar-production.up.railway.app/admin/pengembalian/qr', false);
-    }
 }

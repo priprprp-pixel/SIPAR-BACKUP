@@ -19,8 +19,6 @@ Route::middleware('guest')->group(function () {
     Route::post('/daftar', [AuthController::class, 'store'])->name('register.store');
 });
 
-Route::get('/katalog/qr/{token}', [LoanController::class, 'lookupCatalogQr'])->name('catalog.lookup');
-
 Route::middleware('auth')->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     Route::get('/cari', [SearchController::class, 'index'])->name('search');
@@ -59,7 +57,7 @@ Route::middleware('auth')->group(function () {
         Route::post('/verifikasi/{peminjaman}/setujui', [LoanController::class, 'approve'])->name('approvals.approve');
         Route::post('/verifikasi/{peminjaman}/tolak', [LoanController::class, 'reject'])->name('approvals.reject');
         Route::get('/pengembalian', [ReturnController::class, 'index'])->name('returns');
-        Route::get('/pengembalian/qr/{token}', [ReturnController::class, 'lookup'])->name('returns.lookup');
+        Route::get('/pengembalian/cari', [ReturnController::class, 'search'])->name('returns.search');
         Route::post('/pengembalian', [ReturnController::class, 'store'])->name('returns.store');
         Route::get('/laporan', [ReportController::class, 'index'])->name('reports');
         Route::get('/laporan/export.xlsx', [ReportController::class, 'excel'])->name('reports.xlsx');
@@ -72,7 +70,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/penyerahan', [TechnicianController::class, 'handovers'])->name('handovers');
         Route::post('/penyerahan/{peminjaman}', [TechnicianController::class, 'storeHandover'])->name('handovers.store');
         Route::get('/pengembalian', [ReturnController::class, 'index'])->name('returns');
-        Route::get('/pengembalian/qr/{token}', [ReturnController::class, 'lookup'])->name('returns.lookup');
+        Route::get('/pengembalian/cari', [ReturnController::class, 'search'])->name('returns.search');
         Route::post('/pengembalian', [ReturnController::class, 'store'])->name('returns.store');
     });
 });

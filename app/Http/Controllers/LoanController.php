@@ -25,28 +25,6 @@ class LoanController extends Controller
         return view('catalog', compact('equipment'));
     }
 
-    public function lookupCatalogQr(string $token): JsonResponse
-    {
-        $equipment = Alat::with('kategori')
-            ->where(function ($query) use ($token) {
-                $query->where('qr_code', $token)->orWhere('kode_alat', $token);
-            })
-            ->first();
-
-        if (! $equipment) {
-            return response()->json(['message' => 'Alat tidak ditemukan.'], 404);
-        }
-
-        return response()->json([
-            'id_alat' => $equipment->id_alat,
-            'nama' => $equipment->nama_alat,
-            'kode' => $equipment->kode_alat,
-            'kategori' => $equipment->kategori->nama_kategori,
-            'stok' => $equipment->stok_tersedia,
-            'status' => $equipment->status_alat,
-        ]);
-    }
-
     public function create(Request $request): RedirectResponse
     {
         if ($request->filled('id_alat') && ! $request->has('items')) {
@@ -185,26 +163,4 @@ class LoanController extends Controller
         return back()->with('success', 'Pengajuan ditolak dan catatan tersimpan.');
     }
 
-    public function lookupQr(string $token): JsonResponse
-    {
-        $equipment = Alat::where('qr_code', $token)->first();
-        if (! $equipment) {
-            return response()->json(['message' => 'QR alat tidak ditemukan.'], 404);
-        }
-
-        $loans = Peminjaman::with(['user', 'detail.alat'])
-            ->where('status', 'Approved')
-            ->whereHas('detail', fn ($query) => $query->where('id_alat', $equipment->id_alat))
-            ->get()
-            ->map(fn ($loan) => [
-                'id' => $loan->id_peminjaman,
-                'kode' => 'PJM-'.str_pad((string) $loan->id_peminjaman, 5, '0', STR_PAD_LEFT),
-                'peminjam' => $loan->user->nama,
-                'nis_nip' => $loan->user->nis_nip,
-                'jatuh_tempo' => $loan->tanggal_kembali_rencana->format('d M Y'),
-                'alat' => $loan->detail->map(fn ($detail) => ['nama' => $detail->alat->nama_alat, 'jumlah' => $detail->jumlah]),
-            ]);
-
-        return response()->json(['alat' => $equipment->nama_alat, 'qr_code' => $equipment->qr_code, 'peminjaman' => $loans]);
-    }
 }

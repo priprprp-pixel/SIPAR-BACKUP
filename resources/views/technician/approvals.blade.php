@@ -12,7 +12,7 @@
         <div class="surface p-3 mb-2"><div class="d-flex justify-content-between gap-2 mb-2"><div><strong>{{ $detail->alat->kode_alat }} · {{ $detail->alat->nama_alat }}</strong><small class="d-block text-muted">Pilih tepat {{ $detail->jumlah }} unit</small></div><span class="badge-status status-dipinjam">{{ $units->count() }} tersedia</span></div>
             <div class="row g-2">
             @forelse($units as $unit)
-                <div class="col-12 col-sm-6 col-lg-4"><label class="form-check border rounded p-2 d-flex gap-2 align-items-center"><input class="form-check-input m-0 unit-choice" type="checkbox" name="units[{{ $detail->id_detail }}][]" value="{{ $unit->item_unit_id }}" data-detail="{{ $detail->id_detail }}" data-limit="{{ $detail->jumlah }}"><span><strong>{{ $unit->asset_id }}</strong><small class="d-block text-muted">{{ $unit->qr_code }}</small></span></label></div>
+                <div class="col-12 col-sm-6 col-lg-4"><label class="form-check border rounded p-2 d-flex gap-2 align-items-center"><input class="form-check-input m-0 unit-choice" type="checkbox" name="units[{{ $detail->id_detail }}][]" value="{{ $unit->item_unit_id }}" data-detail="{{ $detail->id_detail }}" data-limit="{{ $detail->jumlah }}"><span><strong>{{ $unit->asset_id }}</strong></span></label></div>
             @empty
                 <div class="col-12"><div class="alert alert-warning mb-0">Tidak ada unit Baik yang tersedia untuk alat ini.</div></div>
             @endforelse

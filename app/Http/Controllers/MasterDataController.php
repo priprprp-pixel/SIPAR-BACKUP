@@ -54,7 +54,6 @@ class MasterDataController extends Controller
         $data = $request->validate([
             'alat_id' => ['required', 'integer', 'exists:alat,id_alat'],
             'asset_id' => ['required', 'string', 'max:80', 'unique:item_units,asset_id'],
-            'qr_code' => ['required', 'string', 'max:120', 'unique:item_units,qr_code'],
             'condition' => ['required', Rule::in(['Baik', 'Maintenance', 'Rusak'])],
             'status' => ['required', Rule::in(['Tersedia', 'Dipinjam'])],
         ]);
@@ -62,6 +61,7 @@ class MasterDataController extends Controller
             return back()->withErrors(['status' => 'Unit baru harus berstatus Tersedia. Status Dipinjam hanya ditetapkan saat approval teknisi.'])->withInput();
         }
 
+        $data['qr_code'] = (string) Str::uuid();
         DB::transaction(function () use ($data): void {
             $equipment = Alat::whereKey($data['alat_id'])->lockForUpdate()->firstOrFail();
             ItemUnit::create($data);
@@ -77,7 +77,6 @@ class MasterDataController extends Controller
         $data = $request->validate([
             'alat_id' => ['required', 'integer', 'exists:alat,id_alat'],
             'asset_id' => ['required', 'string', 'max:80', Rule::unique('item_units', 'asset_id')->ignore($itemUnit->item_unit_id, 'item_unit_id')],
-            'qr_code' => ['required', 'string', 'max:120', Rule::unique('item_units', 'qr_code')->ignore($itemUnit->item_unit_id, 'item_unit_id')],
             'condition' => ['required', Rule::in(['Baik', 'Maintenance', 'Rusak'])],
             'status' => ['required', Rule::in(['Tersedia', 'Dipinjam'])],
         ]);
@@ -87,7 +86,6 @@ class MasterDataController extends Controller
         if ($itemUnit->status === 'Dipinjam' && (
             (int) $data['alat_id'] !== (int) $itemUnit->alat_id
             || $data['asset_id'] !== $itemUnit->asset_id
-            || $data['qr_code'] !== $itemUnit->qr_code
             || $data['condition'] !== $itemUnit->condition
         )) {
             return back()->withErrors(['status' => 'Identitas dan kondisi unit yang sedang dipinjam tidak dapat diubah.']);

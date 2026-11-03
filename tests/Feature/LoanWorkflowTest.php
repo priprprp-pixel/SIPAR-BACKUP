@@ -14,7 +14,7 @@ class LoanWorkflowTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_catalog_qr_lookup_is_public_but_catalog_and_loan_submission_stay_protected(): void
+    public function test_catalog_search_and_loan_submission_stay_protected(): void
     {
         $category = KategoriAlat::create(['nama_kategori' => 'Jaringan']);
         $equipment = Alat::create([
@@ -22,20 +22,13 @@ class LoanWorkflowTest extends TestCase
             'stok_total' => 2, 'stok_tersedia' => 2, 'kondisi' => 'Baik', 'qr_code' => 'qr-public-test', 'status_alat' => 'Tersedia',
         ]);
 
-        $this->getJson(route('catalog.lookup', $equipment->qr_code))
-            ->assertOk()
-            ->assertJsonPath('id_alat', $equipment->id_alat)
-            ->assertJsonPath('nama', 'Alat QR Publik')
-            ->assertJsonPath('stok', 2)
-            ->assertJsonMissingPath('peminjaman');
-
         $this->get(route('catalog'))->assertRedirect(route('login'));
         $this->post(route('loans.create'), [])->assertRedirect(route('login'));
-        $this->get(route('admin.returns.lookup', $equipment->qr_code))->assertRedirect(route('login'));
+        $this->get(route('admin.returns.search', ['q' => $equipment->kode_alat]))->assertRedirect(route('login'));
         $this->assertSame(2, $equipment->fresh()->stok_tersedia);
     }
 
-    public function test_student_can_submit_a_single_item_request_from_the_scanned_qr_form(): void
+    public function test_student_can_submit_a_single_item_request_from_the_catalog_modal(): void
     {
         $category = KategoriAlat::create(['nama_kategori' => 'Jaringan']);
         $equipment = Alat::create([
@@ -106,7 +99,7 @@ class LoanWorkflowTest extends TestCase
             'id_peminjaman' => $loan->id_peminjaman,
             'id_detail' => $loan->detail()->where('id_alat', $equipment->id_alat)->value('id_detail'),
             'jumlah' => 1,
-            'qr_code' => $equipment->qr_code,
+            'kode_alat' => $equipment->kode_alat,
             'tanggal_kembali_aktual' => $returnedAt->toDateTimeString(),
             'kondisi_alat' => 'Rusak',
             'catatan' => 'Lengkap dan berfungsi.',
@@ -119,7 +112,7 @@ class LoanWorkflowTest extends TestCase
             'id_detail' => $loan->detail()->where('id_alat', $equipment->id_alat)->value('id_detail'),
             'jumlah' => 1,
         ]);
-        $this->getJson(route('admin.returns.lookup', $equipment->qr_code))
+        $this->getJson(route('admin.returns.search', ['q' => $equipment->kode_alat]))
             ->assertOk()
             ->assertJsonPath('peminjaman.0.sisa', 1);
         $this->actingAs($admin)->get(route('admin.returns'))->assertOk();
@@ -130,7 +123,7 @@ class LoanWorkflowTest extends TestCase
             'id_peminjaman' => $loan->id_peminjaman,
             'id_detail' => $loan->detail()->where('id_alat', $equipment->id_alat)->value('id_detail'),
             'jumlah' => 1,
-            'qr_code' => $equipment->qr_code,
+            'kode_alat' => $equipment->kode_alat,
             'tanggal_kembali_aktual' => $returnedAt->toDateTimeString(),
             'kondisi_alat' => 'Baik',
         ])->assertRedirect(route('admin.returns'));
@@ -143,7 +136,7 @@ class LoanWorkflowTest extends TestCase
             'id_peminjaman' => $loan->id_peminjaman,
             'id_detail' => $loan->detail()->where('id_alat', $secondEquipment->id_alat)->value('id_detail'),
             'jumlah' => 1,
-            'qr_code' => $secondEquipment->qr_code,
+            'kode_alat' => $secondEquipment->kode_alat,
             'tanggal_kembali_aktual' => $returnedAt->toDateTimeString(),
             'kondisi_alat' => 'Baik',
             'catatan' => 'Router lengkap.',
@@ -181,7 +174,7 @@ class LoanWorkflowTest extends TestCase
             'id_peminjaman' => $loan->id_peminjaman,
             'id_detail' => $detail->id_detail,
             'jumlah' => 1,
-            'qr_code' => $equipment->qr_code,
+            'kode_alat' => $equipment->kode_alat,
             'kondisi_alat' => 'Hilang',
         ])->assertRedirect(route('admin.returns'));
 
@@ -284,7 +277,7 @@ class LoanWorkflowTest extends TestCase
             'id_peminjaman' => $loan->id_peminjaman,
             'id_detail' => $detail->id_detail,
             'jumlah' => 2,
-            'qr_code' => $equipment->qr_code,
+            'kode_alat' => $equipment->kode_alat,
             'kondisi_alat' => 'Baik',
         ])->assertSessionHasErrors('jumlah');
 
@@ -293,21 +286,21 @@ class LoanWorkflowTest extends TestCase
         $this->assertSame(0, $detail->pengembalianDetail()->count());
     }
 
-    public function test_return_qr_lookup_distinguishes_unknown_and_unborrowed_equipment(): void
+    public function test_return_search_distinguishes_unknown_and_unborrowed_equipment(): void
     {
         $admin = User::factory()->create(['role' => 'admin']);
         $category = KategoriAlat::create(['nama_kategori' => 'Jaringan']);
-        Alat::create([
+        $equipment = Alat::create([
             'kode_alat' => 'QR-NO-LOAN', 'nama_alat' => 'Alat Belum Dipinjam', 'id_kategori' => $category->id_kategori,
             'stok_total' => 1, 'stok_tersedia' => 1, 'stok_maintenance' => 0, 'stok_rusak' => 0,
             'kondisi' => 'Baik', 'qr_code' => 'qr-no-loan', 'status_alat' => 'Tersedia',
         ]);
 
-        $this->actingAs($admin)->getJson(route('admin.returns.lookup', 'qr-tidak-dikenal'))
+        $this->actingAs($admin)->getJson(route('admin.returns.search', ['q' => 'alat-tidak-dikenal']))
             ->assertNotFound()
-            ->assertJsonPath('message', 'Alat tidak ditemukan. Periksa QR atau kode alat.');
+            ->assertJsonPath('message', 'Alat tidak ditemukan. Gunakan kode atau nama alat yang benar.');
 
-        $this->getJson(route('admin.returns.lookup', 'qr-no-loan'))
+        $this->getJson(route('admin.returns.search', ['q' => $equipment->kode_alat]))
             ->assertOk()
             ->assertJsonPath('alat', 'Alat Belum Dipinjam')
             ->assertJsonPath('status', 'Tersedia')

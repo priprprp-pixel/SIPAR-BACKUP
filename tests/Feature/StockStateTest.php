@@ -6,11 +6,39 @@ use App\Models\Alat;
 use App\Models\KategoriAlat;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
 class StockStateTest extends TestCase
 {
     use RefreshDatabase;
+
+    public function test_admin_can_replace_equipment_photo_when_editing(): void
+    {
+        Storage::fake('public');
+        $admin = User::factory()->create(['role' => 'admin']);
+        $category = KategoriAlat::create(['nama_kategori' => 'Jaringan']);
+        $equipment = Alat::create([
+            'kode_alat' => 'PHOTO-01', 'nama_alat' => 'Alat Foto', 'id_kategori' => $category->id_kategori,
+            'stok_total' => 1, 'stok_tersedia' => 1, 'kondisi' => 'Baik', 'qr_code' => 'qr-photo-01', 'status_alat' => 'Tersedia',
+        ]);
+
+        $this->actingAs($admin)->post(route('admin.equipment.update', $equipment), [
+            '_method' => 'PUT',
+            'kode_alat' => $equipment->kode_alat,
+            'nama_alat' => $equipment->nama_alat,
+            'id_kategori' => $category->id_kategori,
+            'stok_total' => 1,
+            'kondisi' => 'Baik',
+            'status_alat' => 'Tersedia',
+            'foto' => UploadedFile::fake()->create('alat-baru.jpg', 100, 'image/jpeg'),
+        ])->assertRedirect();
+
+        $photo = $equipment->fresh()->foto;
+        $this->assertNotNull($photo);
+        Storage::disk('public')->assertExists($photo);
+    }
 
     public function test_marking_equipment_for_maintenance_preserves_borrowed_count_and_can_restore_stock(): void
     {

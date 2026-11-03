@@ -28,15 +28,22 @@ class DatabaseSeeder extends Seeder
             'password' => Hash::make('password123'), 'role' => 'siswa',
         ]);
 
-        $categories = collect(['Jaringan', 'Perangkat Komputer', 'Perangkat Input', 'Media & Storage'])
+        $categories = collect(['Komputer', 'Penyimpanan', 'Multimedia', 'Mikrokontroler', 'Perkakas'])
             ->mapWithKeys(fn ($name) => [$name => KategoriAlat::firstOrCreate(['nama_kategori' => $name])]);
         $equipment = [
-            ['LAN-001', 'LAN Tester Digital', 'Jaringan', 5],
-            ['RPL-002', 'Router MikroTik', 'Jaringan', 4],
-            ['RPL-003', 'Laptop Development', 'Perangkat Komputer', 3],
-            ['RPL-004', 'Crimping Tool Set', 'Perangkat Input', 8],
-            ['RPL-005', 'Keyboard Mekanik', 'Perangkat Input', 6],
-            ['RPL-006', 'SSD Eksternal 1TB', 'Media & Storage', 7],
+            ['KOM-001', 'Laptop HP', 'Komputer', 3],
+            ['SIM-001', 'Flashdisk', 'Penyimpanan', 10],
+            ['KOM-002', 'Mouse', 'Komputer', 20],
+            ['KOM-003', 'Keyboard', 'Komputer', 10],
+            ['MUL-001', 'Proyektor', 'Multimedia', 3],
+            ['KOM-004', 'Monitor', 'Komputer', 3],
+            ['PRK-001', 'Obeng mini (1 set)', 'Perkakas', 1],
+            ['MIK-001', 'Arduino Uno', 'Mikrokontroler', 30],
+            ['PRK-002', 'Solder', 'Perkakas', 1],
+            ['PRK-003', 'Bor tembok', 'Perkakas', 1],
+            ['PRK-004', 'Bor mini listrik', 'Perkakas', 1],
+            ['MUL-002', 'Spiker', 'Multimedia', 1],
+            ['MUL-003', 'Mic + sound', 'Multimedia', 1],
         ];
 
         foreach ($equipment as [$code, $name, $category, $stock]) {

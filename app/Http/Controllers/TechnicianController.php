@@ -28,7 +28,7 @@ class TechnicianController extends Controller
             'id_detail' => ['required', 'integer', 'exists:detail_peminjaman,id_detail'],
             'jumlah' => ['required', 'integer', 'min:1', 'max:10000'],
             'kondisi_alat' => ['required', 'in:Baik,Rusak'],
-            'foto_bukti' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
+            'foto_bukti' => ['required', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
             'catatan' => ['nullable', 'string', 'max:2000'],
         ]);
         if ($request->hasFile('foto_bukti')) {

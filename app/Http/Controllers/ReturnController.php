@@ -73,6 +73,9 @@ class ReturnController extends Controller
 
     public function store(Request $request): RedirectResponse
     {
+        $photoRules = $request->user()?->role === 'teknisi'
+            ? ['required', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120']
+            : ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120'];
         $data = $request->validate([
             'id_peminjaman' => ['required', 'integer', 'exists:peminjaman,id_peminjaman'],
             'id_detail' => ['nullable', 'integer', 'exists:detail_peminjaman,id_detail'],
@@ -81,7 +84,7 @@ class ReturnController extends Controller
             'kode_alat' => ['nullable', 'required_without:qr_code', 'string', 'exists:alat,kode_alat'],
             'tanggal_kembali_aktual' => ['nullable', 'date', 'before_or_equal:now'],
             'kondisi_alat' => ['required', 'in:Baik,Rusak,Hilang'],
-            'foto_bukti' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
+            'foto_bukti' => $photoRules,
             'catatan' => ['nullable', 'string', 'max:2000'],
         ]);
         if ($request->hasFile('foto_bukti')) {

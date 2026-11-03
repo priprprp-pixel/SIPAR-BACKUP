@@ -5,11 +5,15 @@ namespace App\Http\Controllers;
 use App\Models\Alat;
 use App\Models\KategoriAlat;
 use App\Models\User;
+use App\Exports\StudentsExport;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Symfony\Component\HttpFoundation\Response;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Illuminate\View\View;
+use Maatwebsite\Excel\Facades\Excel;
 
 class MasterDataController extends Controller
 {
@@ -135,6 +139,19 @@ class MasterDataController extends Controller
     public function students(): View
     {
         return view('admin.students', ['students' => User::where('role', 'siswa')->orderBy('nama')->paginate(15)]);
+    }
+
+    public function exportStudentsExcel()
+    {
+        return Excel::download(new StudentsExport(), 'sipar-data-siswa-'.now()->format('Ymd-His').'.xlsx');
+    }
+
+    public function exportStudentsPdf(): Response
+    {
+        return Pdf::loadView('admin.students-pdf', [
+            'students' => User::where('role', 'siswa')->orderBy('nama')->get(),
+            'generatedAt' => now()->format('d/m/Y H:i'),
+        ])->setPaper('a4', 'portrait')->download('sipar-data-siswa-'.now()->format('Ymd-His').'.pdf');
     }
 
     public function storeStudent(Request $request): RedirectResponse

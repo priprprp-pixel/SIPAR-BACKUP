@@ -45,6 +45,8 @@ Route::middleware('auth')->group(function () {
         Route::put('/kategori/{kategori}', [MasterDataController::class, 'updateCategory'])->name('categories.update');
         Route::delete('/kategori/{kategori}', [MasterDataController::class, 'deleteCategory'])->name('categories.delete');
         Route::get('/siswa', [MasterDataController::class, 'students'])->name('students');
+        Route::get('/siswa/export.xlsx', [MasterDataController::class, 'exportStudentsExcel'])->name('students.xlsx');
+        Route::get('/siswa/export.pdf', [MasterDataController::class, 'exportStudentsPdf'])->name('students.pdf');
         Route::post('/siswa', [MasterDataController::class, 'storeStudent'])->name('students.store');
         Route::put('/siswa/{user}', [MasterDataController::class, 'updateStudent'])->name('students.update');
         Route::delete('/siswa/{user}', [MasterDataController::class, 'deleteStudent'])->name('students.delete');

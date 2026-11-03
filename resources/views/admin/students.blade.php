@@ -3,7 +3,7 @@
 @section('content')
 <div class="page-head">
 	<div><h1>Data Siswa</h1><p>Kelola akun siswa yang dapat mengajukan alat.</p></div>
-	<button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#newStudent"><i class="bi bi-person-plus me-1"></i>Tambah siswa</button>
+	<div class="d-flex flex-wrap gap-2"><a class="btn btn-light" href="{{ route('admin.students.xlsx') }}"><i class="bi bi-file-earmark-spreadsheet me-1"></i>Excel</a><a class="btn btn-light" href="{{ route('admin.students.pdf') }}"><i class="bi bi-file-earmark-pdf me-1"></i>PDF</a><button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#newStudent"><i class="bi bi-person-plus me-1"></i>Tambah siswa</button></div>
 </div>
 
 <section class="surface">

@@ -30,7 +30,7 @@ class AuthenticationTest extends TestCase
     public function test_provisioned_technician_can_sign_in_with_default_credentials(): void
     {
         $this->post(route('login.store'), [
-            'identity' => 'teknisi@sipar.sch.id',
+            'identity' => 'teknisi',
             'password' => 'TEKNISI123',
             'role' => 'teknisi',
         ])->assertRedirect(route('dashboard'));

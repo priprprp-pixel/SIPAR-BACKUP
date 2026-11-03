@@ -16,7 +16,7 @@ return new class extends Migration
         if ($account) {
             DB::table('users')->where('id_user', $account->id_user)->update([
                 'nama' => 'Teknisi SIPAR',
-                'nis_nip' => 'TEKNISI',
+                'nis_nip' => 'teknisi',
                 'password' => Hash::make('TEKNISI123'),
                 'role' => 'teknisi',
                 'updated_at' => now(),
@@ -27,7 +27,7 @@ return new class extends Migration
 
         DB::table('users')->insert([
             'nama' => 'Teknisi SIPAR',
-            'nis_nip' => 'TEKNISI',
+            'nis_nip' => 'teknisi',
             'email' => 'teknisi@sipar.sch.id',
             'password' => Hash::make('TEKNISI123'),
             'role' => 'teknisi',

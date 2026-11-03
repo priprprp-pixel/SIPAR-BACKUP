@@ -31,7 +31,7 @@
         .auth-form{width:min(100%,430px);padding:38px;background:#fff;border:1px solid #e3e9ed;border-radius:12px;box-shadow:0 18px 50px rgba(18,43,58,.08);animation:auth-enter .35s ease-out both}
         .auth-form h2{font-size:25px;color:var(--auth-ink)}
         .auth-form>p{font-size:13px;line-height:1.55;color:var(--auth-muted);margin:7px 0 24px}
-        .role-switch{gap:3px;padding:4px;background:#edf2f5;border:1px solid #e2e9ed;border-radius:8px;margin-bottom:22px}
+        .role-switch{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:4px;padding:4px;background:#edf2f5;border:1px solid #e2e9ed;border-radius:8px;margin-bottom:22px}
         .role-switch button{min-height:40px;padding:8px 10px;border:0;border-radius:6px;background:transparent;color:#536977;font:600 12px 'DM Sans',sans-serif;white-space:nowrap;transition:background-color .16s ease,color .16s ease,box-shadow .16s ease}
         .role-switch button:hover{color:var(--auth-ink)}
         .role-switch button.active{background:#fff;color:var(--auth-blue-dark);box-shadow:0 1px 4px rgba(19,44,58,.14)}

@@ -33,6 +33,7 @@
         .modal-dialog .modal-content{max-width:100%;overflow:hidden}
         .modal-dialog .modal-body{max-height:70vh;overflow-y:auto}
         .operational-modal{max-width:560px!important}
+        .equipment-modal-dialog{width:calc(100% - 2rem)!important;max-width:620px!important}
         .topbar-search button{position:absolute;top:4px;right:4px;width:34px;height:34px;padding:0;display:grid;place-items:center}
         .topbar-search button .bi{position:static;left:auto;top:auto;color:inherit;font-size:14px;line-height:1}
         .topbar-avatar{display:grid;width:34px;height:34px;flex:none;place-items:center;border-radius:50%;background:#e8f2ff;color:#0868ce}

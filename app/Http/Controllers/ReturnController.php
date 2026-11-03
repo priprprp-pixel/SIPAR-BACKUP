@@ -81,8 +81,12 @@ class ReturnController extends Controller
             'kode_alat' => ['nullable', 'required_without:qr_code', 'string', 'exists:alat,kode_alat'],
             'tanggal_kembali_aktual' => ['nullable', 'date', 'before_or_equal:now'],
             'kondisi_alat' => ['required', 'in:Baik,Rusak,Hilang'],
+            'foto_bukti' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
             'catatan' => ['nullable', 'string', 'max:2000'],
         ]);
+        if ($request->hasFile('foto_bukti')) {
+            $data['foto_bukti'] = $request->file('foto_bukti')->store('bukti/pengembalian', 'public');
+        }
         $equipment = isset($data['qr_code'])
             ? Alat::where('qr_code', $data['qr_code'])->firstOrFail()
             : Alat::where('kode_alat', $data['kode_alat'])->firstOrFail();
@@ -137,6 +141,7 @@ class ReturnController extends Controller
                     'jumlah' => $quantity,
                     'tanggal_kembali_aktual' => $returnedAt,
                     'kondisi_alat' => $data['kondisi_alat'],
+                    'foto_bukti' => $data['foto_bukti'] ?? null,
                     'denda' => $fine,
                     'catatan' => $data['catatan'] ?? null,
                 ]);

@@ -29,6 +29,8 @@
         .topbar-profile{display:flex;align-items:center;gap:13px;color:inherit;text-decoration:none}
         .topbar-profile:hover{color:var(--blue)}
         .topbar-search input{min-width:0;padding-right:38px}
+        .modal-dialog{width:calc(100% - 2rem);max-width:640px}
+        .operational-modal{max-width:640px}
         .topbar-search button{position:absolute;top:4px;right:4px;width:34px;height:34px;padding:0;display:grid;place-items:center}
         .topbar-search button .bi{position:static;left:auto;top:auto;color:inherit;font-size:14px;line-height:1}
         .topbar-avatar{display:grid;width:34px;height:34px;flex:none;place-items:center;border-radius:50%;background:#e8f2ff;color:#0868ce}

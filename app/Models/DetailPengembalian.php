@@ -11,7 +11,7 @@ class DetailPengembalian extends Model
 
     protected $primaryKey = 'id_detail_pengembalian';
 
-    protected $fillable = ['id_detail', 'jumlah', 'tanggal_kembali_aktual', 'kondisi_alat', 'denda', 'catatan'];
+    protected $fillable = ['id_detail', 'jumlah', 'tanggal_kembali_aktual', 'kondisi_alat', 'foto_bukti', 'denda', 'catatan'];
 
     protected $casts = ['jumlah' => 'integer', 'tanggal_kembali_aktual' => 'datetime', 'denda' => 'decimal:2'];
 

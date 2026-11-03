@@ -21,6 +21,8 @@
     <style>.sidebar{overflow-y:auto}.sidebar-logout-form{position:sticky;bottom:0;flex:none;margin-top:8px;padding:9px 8px 12px;background:var(--sidebar);border-top:1px solid #304457;z-index:2}.sidebar-logout{display:flex;align-items:center;gap:9px;width:100%;padding:3px 0;border:0;background:none;color:#c1ceda;text-align:left;font:inherit;font-size:12px}.sidebar-logout:hover{color:#fff}</style>
     <style>
         .workspace,.content,.surface{min-width:0}
+        .pagination svg{width:1rem;height:1rem;display:block}
+        .pagination .page-link{display:flex;align-items:center;justify-content:center;min-width:2.25rem}
         .page-head{flex-wrap:wrap;align-items:flex-start}
         .page-head>div:last-child{max-width:100%;flex-wrap:wrap}
         .topbar-search{min-width:0}

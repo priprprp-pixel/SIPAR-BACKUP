@@ -34,6 +34,16 @@
         .modal-dialog .modal-body{max-height:70vh;overflow-y:auto}
         .operational-modal{max-width:560px!important}
         .equipment-modal-dialog{width:calc(100% - 2rem)!important;max-width:620px!important}
+        .export-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+        .export-action{display:inline-flex;align-items:center;gap:7px;min-height:38px;padding:9px 14px;border:1px solid transparent;border-radius:8px;font-size:12px;font-weight:700;text-decoration:none;box-shadow:0 2px 6px rgba(16,35,52,.10),0 1px 2px rgba(16,35,52,.08);transition:transform .16s ease,box-shadow .16s ease,background-color .16s ease}
+        .export-action:hover{transform:translateY(-1px);box-shadow:0 5px 12px rgba(16,35,52,.15),0 2px 3px rgba(16,35,52,.10)}
+        .export-action:active{transform:translateY(0);box-shadow:0 1px 3px rgba(16,35,52,.12)}
+        .export-action-excel{color:#176b4a;background:#f2fbf6;border-color:#b9e5cd}
+        .export-action-excel:hover{color:#12583d;background:#e2f6eb}
+        .export-action-excel .bi{color:#168361}
+        .export-action-pdf{color:#a7353f;background:#fff5f5;border-color:#f0c4c8}
+        .export-action-pdf:hover{color:#8e2933;background:#ffeaeb}
+        .export-action-pdf .bi{color:#bd3d4a}
         .topbar-search button{position:absolute;top:4px;right:4px;width:34px;height:34px;padding:0;display:grid;place-items:center}
         .topbar-search button .bi{position:static;left:auto;top:auto;color:inherit;font-size:14px;line-height:1}
         .topbar-avatar{display:grid;width:34px;height:34px;flex:none;place-items:center;border-radius:50%;background:#e8f2ff;color:#0868ce}
@@ -69,6 +79,8 @@
             .page-head>div:last-child .btn{flex:1;min-width:0;white-space:normal}
             .stat{height:100%}
             .modal-dialog{margin:.5rem auto}
+            .export-actions{width:100%}
+            .export-action{flex:1;justify-content:center;min-width:0;padding-right:10px;padding-left:10px}
         }
     </style>
     @stack('head')

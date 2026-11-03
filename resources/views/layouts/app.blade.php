@@ -98,7 +98,7 @@
             <a class="nav-link {{ request()->routeIs('admin.categories') ? 'active' : '' }}" href="{{ route('admin.categories') }}"><i class="bi bi-collection"></i>Kategori</a>
             <a class="nav-link {{ request()->routeIs('admin.students') ? 'active' : '' }}" href="{{ route('admin.students') }}"><i class="bi bi-people"></i>Data Siswa</a>
             <a class="nav-link {{ request()->routeIs('admin.approvals') ? 'active' : '' }}" href="{{ route('admin.approvals') }}"><i class="bi bi-check2-square"></i>Verifikasi <span class="badge rounded-pill text-bg-warning ms-auto">{{ \App\Models\Peminjaman::where('status', 'Pending')->count() }}</span></a>
-            <a class="nav-link {{ request()->routeIs('admin.returns') ? 'active' : '' }}" href="{{ route('admin.returns') }}">            <i class="bi bi-arrow-return-left"></i>Pengembalian</a>
+            <a class="nav-link {{ request()->routeIs('admin.returns*') ? 'active' : '' }}" href="{{ route('admin.returns.verify') }}"><i class="bi bi-shield-check"></i>Verifikasi Pengembalian <span class="badge rounded-pill text-bg-warning ms-auto">{{ \App\Models\DetailPengembalian::where('status_verifikasi', 'Pending')->count() }}</span></a>
             <a class="nav-link {{ request()->routeIs('admin.reports*') ? 'active' : '' }}" href="{{ route('admin.reports') }}"><i class="bi bi-file-earmark-bar-graph"></i>Laporan & Export</a>
         @elseif(auth()->user()->role === 'teknisi')
             <a class="nav-link {{ request()->routeIs('technician.handovers') ? 'active' : '' }}" href="{{ route('technician.handovers') }}"><i class="bi bi-box-arrow-in-down"></i>Penyerahan Alat</a>
@@ -126,7 +126,7 @@
                 <a class="nav-link {{ request()->routeIs('admin.categories') ? 'active' : '' }}" href="{{ route('admin.categories') }}"><i class="bi bi-collection"></i>Kategori</a>
                 <a class="nav-link {{ request()->routeIs('admin.students') ? 'active' : '' }}" href="{{ route('admin.students') }}"><i class="bi bi-people"></i>Data Siswa</a>
                 <a class="nav-link {{ request()->routeIs('admin.approvals') ? 'active' : '' }}" href="{{ route('admin.approvals') }}"><i class="bi bi-check2-square"></i>Verifikasi <span class="badge rounded-pill text-bg-warning ms-auto">{{ \App\Models\Peminjaman::where('status', 'Pending')->count() }}</span></a>
-                <a class="nav-link {{ request()->routeIs('admin.returns') ? 'active' : '' }}" href="{{ route('admin.returns') }}">                <i class="bi bi-arrow-return-left"></i>Pengembalian</a>
+                <a class="nav-link {{ request()->routeIs('admin.returns*') ? 'active' : '' }}" href="{{ route('admin.returns.verify') }}"><i class="bi bi-shield-check"></i>Verifikasi Pengembalian <span class="badge rounded-pill text-bg-warning ms-auto">{{ \App\Models\DetailPengembalian::where('status_verifikasi', 'Pending')->count() }}</span></a>
                 <a class="nav-link {{ request()->routeIs('admin.reports*') ? 'active' : '' }}" href="{{ route('admin.reports') }}"><i class="bi bi-file-earmark-bar-graph"></i>Laporan & Export</a>
             @elseif(auth()->user()->role === 'teknisi')
                 <a class="nav-link {{ request()->routeIs('technician.handovers') ? 'active' : '' }}" href="{{ route('technician.handovers') }}"><i class="bi bi-box-arrow-in-down"></i>Penyerahan Alat</a>

@@ -57,6 +57,8 @@ Route::middleware('auth')->group(function () {
         Route::post('/verifikasi/{peminjaman}/setujui', [LoanController::class, 'approve'])->name('approvals.approve');
         Route::post('/verifikasi/{peminjaman}/tolak', [LoanController::class, 'reject'])->name('approvals.reject');
         Route::get('/pengembalian', [ReturnController::class, 'index'])->name('returns');
+        Route::get('/pengembalian/verifikasi', [ReturnController::class, 'verificationIndex'])->name('returns.verify');
+        Route::post('/pengembalian/verifikasi/{return}/setujui', [ReturnController::class, 'approveReturn'])->name('returns.verify.approve');
         Route::get('/pengembalian/cari', [ReturnController::class, 'search'])->name('returns.search');
         Route::post('/pengembalian', [ReturnController::class, 'store'])->name('returns.store');
         Route::get('/laporan', [ReportController::class, 'index'])->name('reports');

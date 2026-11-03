@@ -50,6 +50,26 @@ class TechnicianWorkflowTest extends TestCase
             'kode_alat' => $equipment->kode_alat,
             'kondisi_alat' => 'Baik',
         ])->assertSessionHasErrors('foto_bukti');
+        $this->actingAs($technician)->post(route('technician.returns.store'), [
+            'id_peminjaman' => $loan->id_peminjaman,
+            'id_detail' => $detail->id_detail,
+            'jumlah' => 1,
+            'kode_alat' => $equipment->kode_alat,
+            'kondisi_alat' => 'Baik',
+            'foto_bukti' => UploadedFile::fake()->create('pengembalian.jpg', 100, 'image/jpeg'),
+        ])->assertRedirect(route('technician.returns'));
+        $this->assertSame(0, $equipment->fresh()->stok_tersedia);
+        $this->assertDatabaseHas('detail_pengembalian', [
+            'id_detail' => $detail->id_detail,
+            'status_verifikasi' => 'Pending',
+            'id_teknisi' => $technician->id_user,
+        ]);
+        $admin = User::factory()->create(['role' => 'admin']);
+        $pendingReturn = \App\Models\DetailPengembalian::firstOrFail();
+        $this->actingAs($admin)->get(route('admin.returns.verify'))->assertOk();
+        $this->actingAs($admin)->post(route('admin.returns.verify.approve', $pendingReturn))->assertRedirect();
+        $this->assertSame(1, $equipment->fresh()->stok_tersedia);
+        $this->assertSame('Selesai', $loan->fresh()->status);
         $this->actingAs($technician)->get(route('admin.equipment'))->assertForbidden();
     }
 }

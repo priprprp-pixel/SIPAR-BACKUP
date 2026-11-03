@@ -24,6 +24,8 @@ class Peminjaman extends Model
             'Pending' => 'Menunggu Konfirmasi',
             'Approved' => 'Disetujui',
             'Rejected' => 'Ditolak',
+            'Cancelled' => 'Dibatalkan',
+            'Selesai' => 'Selesai',
         ][$this->status] ?? ($this->status ?? '-');
     }
 

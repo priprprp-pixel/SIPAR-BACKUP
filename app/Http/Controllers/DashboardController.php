@@ -15,6 +15,8 @@ class DashboardController extends Controller
         $isAdmin = $role === 'admin';
         $isTeknisi = $role === 'teknisi';
         $loans = Peminjaman::with(['user', 'detail.alat'])->latest('tanggal_pengajuan');
+        $approvedLoans = Peminjaman::with(['detail.penyerahanDetail', 'detail.pengembalianDetail'])
+            ->where('status', 'Approved')->get();
 
         if (! $isAdmin && ! $isTeknisi) {
             $loans->where('id_user', $request->user()->id_user);
@@ -33,8 +35,8 @@ class DashboardController extends Controller
             'myCompletedCount' => (clone $myLoans)->where('status', 'Selesai')->count(),
             'recentLoans' => $loans->take(6)->get(),
             'topAlat' => Alat::with('kategori')->orderByDesc('stok_total')->take(5)->get(),
-            'handoverCount' => $isTeknisi ? Peminjaman::where('status', 'Approved')->count() : 0,
-            'activeReturnCount' => $isTeknisi ? Peminjaman::where('status', 'Approved')->count() : 0,
+            'handoverCount' => $isTeknisi ? $approvedLoans->filter(fn ($loan) => $loan->detail->contains(fn ($detail) => $detail->penyerahanDetail->sum('jumlah') < $detail->jumlah))->count() : 0,
+            'activeReturnCount' => $isTeknisi ? $approvedLoans->filter(fn ($loan) => $loan->detail->contains(fn ($detail) => $detail->penyerahanDetail->sum('jumlah') > $detail->pengembalianDetail->sum('jumlah')))->count() : 0,
         ]);
     }
 }

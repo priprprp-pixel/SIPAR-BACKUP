@@ -23,4 +23,9 @@ class ItemUnit extends Model
             ->withPivot(['assigned_by'])
             ->withTimestamps();
     }
+
+    public function handovers(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(DetailPenyerahan::class, 'item_unit_id', 'item_unit_id');
+    }
 }

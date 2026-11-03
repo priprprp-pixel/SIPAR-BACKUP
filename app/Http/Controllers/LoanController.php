@@ -116,9 +116,26 @@ class LoanController extends Controller
 
     public function approvals(): View
     {
-        $loans = Peminjaman::with(['user', 'detail.alat'])->whereIn('status', ['Pending', 'Approved'])->latest('tanggal_pengajuan')->paginate(12);
+        $loans = Peminjaman::with(['user', 'detail.alat'])
+            ->whereIn('status', ['Pending', 'Approved'])
+            ->whereDoesntHave('detail.alat.itemUnits')
+            ->latest('tanggal_pengajuan')->paginate(12);
 
         return view('admin.approvals', compact('loans'));
+    }
+
+    public function cancel(Request $request, Peminjaman $peminjaman): RedirectResponse
+    {
+        $cancelled = Peminjaman::whereKey($peminjaman->id_peminjaman)
+            ->where('id_user', $request->user()->id_user)
+            ->where('status', 'Pending')
+            ->update(['status' => 'Cancelled']);
+
+        if (! $cancelled) {
+            return back()->withErrors(['status' => 'Hanya pengajuan yang masih Pending yang dapat dibatalkan.']);
+        }
+
+        return back()->with('success', 'Pengajuan peminjaman berhasil dibatalkan.');
     }
 
     public function approve(Peminjaman $peminjaman): RedirectResponse

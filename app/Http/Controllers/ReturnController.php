@@ -20,8 +20,12 @@ class ReturnController extends Controller
 {
     public function index(): View
     {
-        $activeLoans = Peminjaman::with(['user', 'detail.alat', 'detail.pengembalianDetail', 'detail.itemUnits'])
-            ->where('status', 'Approved')->latest('tanggal_pengajuan')->paginate(12);
+        $query = Peminjaman::with(['user', 'detail.alat', 'detail.pengembalianDetail', 'detail.itemUnits'])
+            ->where('status', 'Approved');
+        if (auth()->user()->role === 'admin') {
+            $query->whereDoesntHave('detail.itemUnits');
+        }
+        $activeLoans = $query->latest('tanggal_pengajuan')->paginate(12);
 
         return view('admin.returns', compact('activeLoans'));
     }
@@ -33,10 +37,14 @@ class ReturnController extends Controller
             return response()->json(['message' => 'Alat tidak ditemukan. Periksa QR atau kode alat.'], 404);
         }
 
-        $loans = Peminjaman::with(['user', 'detail.alat', 'detail.pengembalianDetail', 'detail.itemUnits'])
+        $loansQuery = Peminjaman::with(['user', 'detail.alat', 'detail.pengembalianDetail', 'detail.itemUnits'])
             ->where('status', 'Approved')
             ->whereHas('detail', fn ($query) => $query->where('id_alat', $equipment->id_alat))
-            ->get()
+            ;
+        if (auth()->user()->role === 'admin') {
+            $loansQuery->whereDoesntHave('detail.itemUnits');
+        }
+        $loans = $loansQuery->get()
             ->flatMap(function (Peminjaman $loan) use ($equipment) {
                 return $loan->detail
                     ->where('id_alat', $equipment->id_alat)
@@ -137,6 +145,9 @@ class ReturnController extends Controller
                     }
                     if (($data['jumlah'] ?? 1) !== 1) {
                         throw ValidationException::withMessages(['jumlah' => 'Pengembalian unit fisik harus satu unit per proses.']);
+                    }
+                    if (! $detail->penyerahanDetail()->where('item_unit_id', $itemUnit->item_unit_id)->exists()) {
+                        throw ValidationException::withMessages(['item_unit_id' => 'Unit ini belum tercatat dalam penyerahan.']);
                     }
                 }
 

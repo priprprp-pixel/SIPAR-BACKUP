@@ -32,6 +32,7 @@ Route::middleware('auth')->group(function () {
     Route::middleware('role:siswa')->group(function () {
         Route::get('/katalog', [LoanController::class, 'catalog'])->name('catalog');
         Route::post('/pengajuan', [LoanController::class, 'create'])->name('loans.create');
+        Route::post('/pengajuan/{peminjaman}/batal', [LoanController::class, 'cancel'])->name('loans.cancel');
         Route::get('/riwayat', [LoanController::class, 'mine'])->name('loans.mine');
     });
 

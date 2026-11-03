@@ -35,7 +35,7 @@ return new class extends Migration
             $table->date('tanggal_pinjam');
             $table->date('tanggal_kembali_rencana');
             $table->text('keperluan');
-            $table->enum('status', ['Pending', 'Approved', 'Rejected', 'Selesai'])->default('Pending');
+            $table->enum('status', ['Pending', 'Approved', 'Rejected', 'Cancelled', 'Selesai'])->default('Pending');
             $table->text('catatan_admin')->nullable();
             $table->timestamps();
         });

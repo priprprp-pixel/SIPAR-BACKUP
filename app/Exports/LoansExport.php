@@ -70,7 +70,7 @@ class LoansExport implements FromCollection, ShouldAutoSize, WithHeadings
             $query->whereDate('tanggal_pengajuan', '<=', $this->filters['sampai']);
         }
 
-        if (in_array($this->filters['status'] ?? null, ['Pending', 'Approved', 'Rejected', 'Selesai'], true)) {
+        if (in_array($this->filters['status'] ?? null, ['Pending', 'Approved', 'Rejected', 'Cancelled', 'Selesai'], true)) {
             $query->where('status', $this->filters['status']);
         }
 

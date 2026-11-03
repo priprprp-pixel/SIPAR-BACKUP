@@ -14,6 +14,7 @@ use Symfony\Component\HttpFoundation\Response;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 use Maatwebsite\Excel\Facades\Excel;
@@ -140,8 +141,12 @@ class MasterDataController extends Controller
             'stok_total' => ['required', 'integer', 'min:'.$minimumStock, 'max:10000'],
             'kondisi' => ['required', 'string', 'max:80'],
             'deskripsi' => ['nullable', 'string', 'max:2000'],
+            'foto' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
             'status_alat' => ['required', Rule::in(['Tersedia', 'Maintenance', 'Rusak'])],
         ]);
+        if ($request->hasFile('foto')) {
+            $data['foto'] = $request->file('foto')->store('alat', 'public');
+        }
         $data['stok_tersedia'] = $data['stok_total'];
         $data['stok_maintenance'] = 0;
         $data['stok_rusak'] = 0;
@@ -165,8 +170,18 @@ class MasterDataController extends Controller
             'stok_total' => ['required', 'integer', 'min:'.$minimumStock, 'max:10000'],
             'kondisi' => ['required', 'string', 'max:80'],
             'deskripsi' => ['nullable', 'string', 'max:2000'],
+            'foto' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
             'status_alat' => ['required', Rule::in(['Tersedia', 'Maintenance', 'Rusak'])],
         ]);
+        if ($request->hasFile('foto')) {
+            $newPhoto = $request->file('foto')->store('alat', 'public');
+            if ($alat->foto) {
+                Storage::disk('public')->delete($alat->foto);
+            }
+            $data['foto'] = $newPhoto;
+        } else {
+            unset($data['foto']);
+        }
         $borrowed = max(0, $alat->stok_total - $alat->stok_tersedia - $alat->stok_maintenance - $alat->stok_rusak);
         $statusChanged = $data['status_alat'] !== $alat->status_alat;
 

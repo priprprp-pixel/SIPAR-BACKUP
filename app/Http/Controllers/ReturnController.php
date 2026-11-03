@@ -7,7 +7,6 @@ use App\Models\DetailPengembalian;
 use App\Models\Peminjaman;
 use App\Models\Pengembalian;
 use App\Models\ItemUnit;
-use Carbon\Carbon;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -167,9 +166,7 @@ class ReturnController extends Controller
                     throw ValidationException::withMessages(['jumlah' => 'Alat belum tercatat diserahkan atau jumlah pengembalian melebihi penyerahan.']);
                 }
 
-                $returnedAt = isset($data['tanggal_kembali_aktual'])
-                    ? Carbon::parse($data['tanggal_kembali_aktual'])
-                    : now();
+                $returnedAt = now();
                 $lateDays = max(0, $loan->tanggal_kembali_rencana->copy()->startOfDay()->diffInDays($returnedAt->copy()->startOfDay(), false));
                 $loanDetails = $loan->detail()->with('pengembalianDetail')->get();
                 $willComplete = $loanDetails->every(function ($loanDetail) use ($detail, $quantity): bool {

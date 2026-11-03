@@ -12,7 +12,7 @@ class Alat extends Model
 
     protected $primaryKey = 'id_alat';
 
-    protected $fillable = ['kode_alat', 'nama_alat', 'id_kategori', 'stok_total', 'stok_tersedia', 'stok_maintenance', 'stok_rusak', 'kondisi', 'deskripsi', 'qr_code', 'status_alat'];
+    protected $fillable = ['kode_alat', 'nama_alat', 'id_kategori', 'stok_total', 'stok_tersedia', 'stok_maintenance', 'stok_rusak', 'kondisi', 'deskripsi', 'foto', 'qr_code', 'status_alat'];
 
     protected $casts = ['stok_total' => 'integer', 'stok_tersedia' => 'integer', 'stok_maintenance' => 'integer', 'stok_rusak' => 'integer'];
 

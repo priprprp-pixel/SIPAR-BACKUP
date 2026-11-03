@@ -96,7 +96,7 @@ class ReturnController extends Controller
             'jumlah' => ['nullable', 'integer', 'min:1', 'max:10000'],
             'qr_code' => ['nullable', 'required_without:kode_alat', 'string', 'exists:alat,qr_code'],
             'kode_alat' => ['nullable', 'required_without:qr_code', 'string', 'exists:alat,kode_alat'],
-            'tanggal_kembali_aktual' => ['nullable', 'date', 'before_or_equal:now'],
+            'tanggal_kembali_aktual' => ['nullable', 'date'],
             'kondisi_alat' => ['required', 'in:Baik,Maintenance,Rusak,Hilang'],
             'foto_bukti' => $photoRules,
             'catatan' => ['nullable', 'string', 'max:2000'],

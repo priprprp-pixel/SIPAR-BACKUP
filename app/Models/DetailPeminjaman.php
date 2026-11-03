@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class DetailPeminjaman extends Model
 {
@@ -32,5 +33,12 @@ class DetailPeminjaman extends Model
     public function penyerahanDetail(): HasMany
     {
         return $this->hasMany(DetailPenyerahan::class, 'id_detail', 'id_detail');
+    }
+
+    public function itemUnits(): BelongsToMany
+    {
+        return $this->belongsToMany(ItemUnit::class, 'detail_peminjaman_item_unit', 'id_detail', 'item_unit_id')
+            ->withPivot(['assigned_by'])
+            ->withTimestamps();
     }
 }

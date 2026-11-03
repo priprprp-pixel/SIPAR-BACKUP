@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Alat;
 use App\Models\KategoriAlat;
 use App\Models\User;
+use App\Models\ItemUnit;
 use App\Exports\StudentsExport;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\RedirectResponse;
@@ -25,6 +26,73 @@ class MasterDataController extends Controller
         })->orderBy('nama_alat')->paginate(15)->withQueryString();
 
         return view('admin.equipment.index', ['items' => $items, 'categories' => KategoriAlat::orderBy('nama_kategori')->get()]);
+    }
+
+    public function itemUnits(Request $request): View
+    {
+        $units = ItemUnit::with('alat')
+            ->when($request->string('q')->trim()->isNotEmpty(), function ($query) use ($request): void {
+                $term = '%'.$request->string('q')->trim().'%';
+                $query->where('asset_id', 'like', $term)
+                    ->orWhereHas('alat', fn ($alat) => $alat->where('nama_alat', 'like', $term)->orWhere('kode_alat', 'like', $term));
+            })
+            ->orderBy('asset_id')
+            ->paginate(20)
+            ->withQueryString();
+
+        return view('admin.item-units', [
+            'units' => $units,
+            'equipment' => Alat::orderBy('nama_alat')->get(),
+        ]);
+    }
+
+    public function storeItemUnit(Request $request): RedirectResponse
+    {
+        $data = $request->validate([
+            'alat_id' => ['required', 'integer', 'exists:alat,id_alat'],
+            'asset_id' => ['required', 'string', 'max:80', 'unique:item_units,asset_id'],
+            'qr_code' => ['required', 'string', 'max:120', 'unique:item_units,qr_code'],
+            'condition' => ['required', Rule::in(['Baik', 'Maintenance', 'Rusak'])],
+            'status' => ['required', Rule::in(['Tersedia', 'Dipinjam'])],
+        ]);
+        if ($data['status'] === 'Dipinjam' && $data['condition'] !== 'Baik') {
+            return back()->withErrors(['status' => 'Unit rusak atau maintenance tidak boleh langsung berstatus Dipinjam.'])->withInput();
+        }
+
+        ItemUnit::create($data);
+
+        return back()->with('success', 'Unit fisik berhasil ditambahkan.');
+    }
+
+    public function updateItemUnit(Request $request, ItemUnit $itemUnit): RedirectResponse
+    {
+        $data = $request->validate([
+            'alat_id' => ['required', 'integer', 'exists:alat,id_alat'],
+            'asset_id' => ['required', 'string', 'max:80', Rule::unique('item_units', 'asset_id')->ignore($itemUnit->item_unit_id, 'item_unit_id')],
+            'qr_code' => ['required', 'string', 'max:120', Rule::unique('item_units', 'qr_code')->ignore($itemUnit->item_unit_id, 'item_unit_id')],
+            'condition' => ['required', Rule::in(['Baik', 'Maintenance', 'Rusak'])],
+            'status' => ['required', Rule::in(['Tersedia', 'Dipinjam'])],
+        ]);
+        if ($itemUnit->status === 'Dipinjam' && $data['status'] !== 'Dipinjam') {
+            return back()->withErrors(['status' => 'Unit yang sedang dipinjam hanya dapat diubah saat proses pengembalian.']);
+        }
+        if ($data['status'] === 'Dipinjam' && $data['condition'] !== 'Baik') {
+            return back()->withErrors(['status' => 'Unit rusak atau maintenance tidak boleh berstatus Dipinjam.'])->withInput();
+        }
+
+        $itemUnit->update($data);
+
+        return back()->with('success', 'Unit fisik berhasil diperbarui.');
+    }
+
+    public function deleteItemUnit(ItemUnit $itemUnit): RedirectResponse
+    {
+        if ($itemUnit->status === 'Dipinjam' || $itemUnit->details()->exists()) {
+            return back()->withErrors(['unit' => 'Unit yang sedang atau pernah dipinjam tidak dapat dihapus.']);
+        }
+        $itemUnit->delete();
+
+        return back()->with('success', 'Unit fisik berhasil dihapus.');
     }
 
     public function storeEquipment(Request $request): RedirectResponse

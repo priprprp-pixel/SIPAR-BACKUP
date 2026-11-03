@@ -26,6 +26,11 @@ class Alat extends Model
         return $this->hasMany(DetailPeminjaman::class, 'id_alat', 'id_alat');
     }
 
+    public function itemUnits(): HasMany
+    {
+        return $this->hasMany(ItemUnit::class, 'alat_id', 'id_alat');
+    }
+
     public function syncStatusFromStock(): void
     {
         $borrowed = max(0, $this->stok_total - $this->stok_tersedia - $this->stok_maintenance - $this->stok_rusak);

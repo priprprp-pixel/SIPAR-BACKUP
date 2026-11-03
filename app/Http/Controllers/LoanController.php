@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Alat;
 use App\Models\Peminjaman;
+use App\Models\ItemUnit;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -127,6 +128,9 @@ class LoanController extends Controller
                 $loan = Peminjaman::whereKey($peminjaman->id_peminjaman)->lockForUpdate()->firstOrFail();
                 if ($loan->status !== 'Pending') {
                     throw ValidationException::withMessages(['status' => 'Pengajuan ini sudah diproses.']);
+                }
+                if (ItemUnit::whereIn('alat_id', $loan->detail->pluck('id_alat'))->exists()) {
+                    throw ValidationException::withMessages(['status' => 'Pengajuan dengan unit fisik harus disetujui melalui Teknisi.']);
                 }
 
                 foreach ($loan->detail as $detail) {

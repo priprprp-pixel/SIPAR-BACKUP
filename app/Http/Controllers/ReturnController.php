@@ -6,6 +6,7 @@ use App\Models\Alat;
 use App\Models\DetailPengembalian;
 use App\Models\Peminjaman;
 use App\Models\Pengembalian;
+use App\Models\ItemUnit;
 use Carbon\Carbon;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\JsonResponse;
@@ -19,7 +20,7 @@ class ReturnController extends Controller
 {
     public function index(): View
     {
-        $activeLoans = Peminjaman::with(['user', 'detail.alat', 'detail.pengembalianDetail'])
+        $activeLoans = Peminjaman::with(['user', 'detail.alat', 'detail.pengembalianDetail', 'detail.itemUnits'])
             ->where('status', 'Approved')->latest('tanggal_pengajuan')->paginate(12);
 
         return view('admin.returns', compact('activeLoans'));
@@ -32,7 +33,7 @@ class ReturnController extends Controller
             return response()->json(['message' => 'Alat tidak ditemukan. Periksa QR atau kode alat.'], 404);
         }
 
-        $loans = Peminjaman::with(['user', 'detail.alat', 'detail.pengembalianDetail'])
+        $loans = Peminjaman::with(['user', 'detail.alat', 'detail.pengembalianDetail', 'detail.itemUnits'])
             ->where('status', 'Approved')
             ->whereHas('detail', fn ($query) => $query->where('id_alat', $equipment->id_alat))
             ->get()
@@ -53,6 +54,10 @@ class ReturnController extends Controller
                             'peminjam' => $loan->user->nama,
                             'nis_nip' => $loan->user->nis_nip,
                             'jatuh_tempo' => $loan->tanggal_kembali_rencana->format('d M Y'),
+                            'units' => $detail->itemUnits->where('status', 'Dipinjam')->map(fn ($unit) => [
+                                'id' => $unit->item_unit_id,
+                                'asset_id' => $unit->asset_id,
+                            ])->values(),
                         ];
                     })
                     ->filter();
@@ -62,6 +67,7 @@ class ReturnController extends Controller
         $response = [
             'alat' => $equipment->nama_alat,
             'kode_alat' => $equipment->kode_alat,
+            'qr_code' => $equipment->qr_code,
             'status' => $equipment->status_alat,
             'stok_tersedia' => $equipment->stok_tersedia,
             'stok_total' => $equipment->stok_total,
@@ -76,14 +82,21 @@ class ReturnController extends Controller
         $photoRules = $request->user()?->role === 'teknisi'
             ? ['required', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120']
             : ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120'];
+        $itemUnitRule = $request->user()?->role === 'teknisi'
+            ? ['required', 'integer', 'exists:item_units,item_unit_id']
+            : ['nullable', 'integer', 'exists:item_units,item_unit_id'];
+        $quantityRule = $request->user()?->role === 'teknisi'
+            ? ['nullable', 'integer', 'min:1', 'max:1']
+            : ['nullable', 'integer', 'min:1', 'max:10000'];
         $data = $request->validate([
             'id_peminjaman' => ['required', 'integer', 'exists:peminjaman,id_peminjaman'],
             'id_detail' => ['nullable', 'integer', 'exists:detail_peminjaman,id_detail'],
-            'jumlah' => ['nullable', 'integer', 'min:1', 'max:10000'],
+            'item_unit_id' => $itemUnitRule,
+            'jumlah' => $quantityRule,
             'qr_code' => ['nullable', 'required_without:kode_alat', 'string', 'exists:alat,qr_code'],
             'kode_alat' => ['nullable', 'required_without:qr_code', 'string', 'exists:alat,kode_alat'],
             'tanggal_kembali_aktual' => ['nullable', 'date', 'before_or_equal:now'],
-            'kondisi_alat' => ['required', 'in:Baik,Rusak,Hilang'],
+            'kondisi_alat' => ['required', 'in:Baik,Maintenance,Rusak,Hilang'],
             'foto_bukti' => $photoRules,
             'catatan' => ['nullable', 'string', 'max:2000'],
         ]);
@@ -111,6 +124,17 @@ class ReturnController extends Controller
                 $detail = $detailQuery->lockForUpdate()->first();
                 if (! $detail) {
                     throw ValidationException::withMessages(['qr_code' => 'QR alat tidak sesuai dengan item pada transaksi ini.']);
+                }
+                $itemUnit = null;
+                if (! empty($data['item_unit_id'])) {
+                    $itemUnit = ItemUnit::whereKey($data['item_unit_id'])
+                        ->where('status', 'Dipinjam')
+                        ->whereHas('details', fn ($query) => $query->where('detail_peminjaman.id_detail', $detail->id_detail))
+                        ->lockForUpdate()
+                        ->first();
+                    if (! $itemUnit) {
+                        throw ValidationException::withMessages(['item_unit_id' => 'Unit fisik tidak sesuai transaksi atau sudah dikembalikan.']);
+                    }
                 }
 
                 $returnedQuantity = $detail->pengembalianDetail()->sum('jumlah');
@@ -148,13 +172,23 @@ class ReturnController extends Controller
                     'denda' => $fine,
                     'catatan' => $data['catatan'] ?? null,
                 ]);
+                if ($itemUnit) {
+                    $itemUnit->update([
+                        'status' => 'Tersedia',
+                        'condition' => $data['kondisi_alat'] === 'Baik' ? 'Baik' : ($data['kondisi_alat'] === 'Maintenance' ? 'Maintenance' : 'Rusak'),
+                    ]);
+                }
 
                 $scannedEquipment->refresh();
                 if ($data['kondisi_alat'] === 'Baik') {
                     $scannedEquipment->stok_tersedia += $quantity;
-                } elseif ($data['kondisi_alat'] === 'Rusak') {
+                } elseif ($data['kondisi_alat'] === 'Maintenance' || $data['kondisi_alat'] === 'Rusak') {
                     $scannedEquipment->stok_maintenance += $quantity;
-                    $scannedEquipment->kondisi = 'Rusak';
+                    if ($data['kondisi_alat'] === 'Rusak') {
+                        $scannedEquipment->kondisi = 'Rusak';
+                    }
+                } elseif ($data['kondisi_alat'] === 'Hilang') {
+                    $scannedEquipment->stok_total = max(0, $scannedEquipment->stok_total - $quantity);
                 } else {
                     $scannedEquipment->stok_total = max(0, $scannedEquipment->stok_total - $quantity);
                 }

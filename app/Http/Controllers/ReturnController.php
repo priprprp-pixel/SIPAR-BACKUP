@@ -181,6 +181,8 @@ class ReturnController extends Controller
             ? 'Semua alat pada transaksi telah kembali. Denda: Rp '.number_format($fine, 0, ',', '.')
             : 'Pengembalian item dicatat; transaksi tetap aktif sampai seluruh alat kembali. Denda item ini: Rp '.number_format($fine, 0, ',', '.');
 
-        return redirect()->route('admin.returns')->with('success', $message);
+        $returnRoute = $request->user()->role === 'teknisi' ? 'technician.returns' : 'admin.returns';
+
+        return redirect()->route($returnRoute)->with('success', $message);
     }
 }

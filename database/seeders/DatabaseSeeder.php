@@ -23,6 +23,10 @@ class DatabaseSeeder extends Seeder
             'nama' => 'Agus Toolman', 'nis_nip' => 'ADMIN',
             'password' => Hash::make('ADMIN123'), 'role' => 'admin',
         ]);
+        User::updateOrCreate(['email' => 'teknisi@sipar.sch.id'], [
+            'nama' => 'Teknisi SIPAR', 'nis_nip' => 'TEKNISI',
+            'password' => Hash::make('TEKNISI123'), 'role' => 'teknisi',
+        ]);
         User::firstOrCreate(['email' => 'siswa@sipar.sch.id'], [
             'nama' => 'Rangga Saputra', 'nis_nip' => '20230001',
             'password' => Hash::make('password123'), 'role' => 'siswa',

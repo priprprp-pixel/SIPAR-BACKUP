@@ -7,6 +7,7 @@ use App\Http\Controllers\MasterDataController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\ReturnController;
 use App\Http\Controllers\SearchController;
+use App\Http\Controllers\TechnicianController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', fn () => redirect()->route(auth()->check() ? 'dashboard' : 'login'));
@@ -56,5 +57,13 @@ Route::middleware('auth')->group(function () {
         Route::get('/laporan', [ReportController::class, 'index'])->name('reports');
         Route::get('/laporan/export.xlsx', [ReportController::class, 'excel'])->name('reports.xlsx');
         Route::get('/laporan/pdf', [ReportController::class, 'pdf'])->name('reports.pdf');
+    });
+
+    Route::prefix('teknisi')->name('technician.')->middleware('role:teknisi')->group(function () {
+        Route::get('/penyerahan', [TechnicianController::class, 'handovers'])->name('handovers');
+        Route::post('/penyerahan/{peminjaman}', [TechnicianController::class, 'storeHandover'])->name('handovers.store');
+        Route::get('/pengembalian', [ReturnController::class, 'index'])->name('returns');
+        Route::get('/pengembalian/qr/{token}', [ReturnController::class, 'lookup'])->name('returns.lookup');
+        Route::post('/pengembalian', [ReturnController::class, 'store'])->name('returns.store');
     });
 });

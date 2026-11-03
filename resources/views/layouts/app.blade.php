@@ -82,6 +82,9 @@
             <a class="nav-link {{ request()->routeIs('admin.approvals') ? 'active' : '' }}" href="{{ route('admin.approvals') }}"><i class="bi bi-check2-square"></i>Verifikasi <span class="badge rounded-pill text-bg-warning ms-auto">{{ \App\Models\Peminjaman::where('status', 'Pending')->count() }}</span></a>
             <a class="nav-link {{ request()->routeIs('admin.returns') ? 'active' : '' }}" href="{{ route('admin.returns') }}"><i class="bi bi-upc-scan"></i>Pengembalian</a>
             <a class="nav-link {{ request()->routeIs('admin.reports*') ? 'active' : '' }}" href="{{ route('admin.reports') }}"><i class="bi bi-file-earmark-bar-graph"></i>Laporan & Export</a>
+        @elseif(auth()->user()->role === 'teknisi')
+            <a class="nav-link {{ request()->routeIs('technician.handovers') ? 'active' : '' }}" href="{{ route('technician.handovers') }}"><i class="bi bi-box-arrow-in-down"></i>Penyerahan Alat</a>
+            <a class="nav-link {{ request()->routeIs('technician.returns') ? 'active' : '' }}" href="{{ route('technician.returns') }}"><i class="bi bi-arrow-return-left"></i>Pengembalian Alat</a>
         @else
             <a class="nav-link {{ request()->routeIs('catalog') ? 'active' : '' }}" href="{{ route('catalog') }}"><i class="bi bi-grid"></i>Katalog Alat</a>
             <a class="nav-link {{ request()->routeIs('loans.mine') ? 'active' : '' }}" href="{{ route('loans.mine') }}"><i class="bi bi-clock-history"></i>Riwayat Peminjaman</a>
@@ -105,6 +108,9 @@
                 <a class="nav-link {{ request()->routeIs('admin.approvals') ? 'active' : '' }}" href="{{ route('admin.approvals') }}"><i class="bi bi-check2-square"></i>Verifikasi <span class="badge rounded-pill text-bg-warning ms-auto">{{ \App\Models\Peminjaman::where('status', 'Pending')->count() }}</span></a>
                 <a class="nav-link {{ request()->routeIs('admin.returns') ? 'active' : '' }}" href="{{ route('admin.returns') }}"><i class="bi bi-upc-scan"></i>Pengembalian</a>
                 <a class="nav-link {{ request()->routeIs('admin.reports*') ? 'active' : '' }}" href="{{ route('admin.reports') }}"><i class="bi bi-file-earmark-bar-graph"></i>Laporan & Export</a>
+            @elseif(auth()->user()->role === 'teknisi')
+                <a class="nav-link {{ request()->routeIs('technician.handovers') ? 'active' : '' }}" href="{{ route('technician.handovers') }}"><i class="bi bi-box-arrow-in-down"></i>Penyerahan Alat</a>
+                <a class="nav-link {{ request()->routeIs('technician.returns') ? 'active' : '' }}" href="{{ route('technician.returns') }}"><i class="bi bi-arrow-return-left"></i>Pengembalian Alat</a>
             @else
                 <a class="nav-link {{ request()->routeIs('catalog') ? 'active' : '' }}" href="{{ route('catalog') }}"><i class="bi bi-grid"></i>Katalog Alat</a>
                 <a class="nav-link {{ request()->routeIs('loans.mine') ? 'active' : '' }}" href="{{ route('loans.mine') }}"><i class="bi bi-clock-history"></i>Riwayat Peminjaman</a>

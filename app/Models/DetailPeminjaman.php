@@ -28,4 +28,9 @@ class DetailPeminjaman extends Model
     {
         return $this->hasMany(DetailPengembalian::class, 'id_detail', 'id_detail');
     }
+
+    public function penyerahanDetail(): HasMany
+    {
+        return $this->hasMany(DetailPenyerahan::class, 'id_detail', 'id_detail');
+    }
 }

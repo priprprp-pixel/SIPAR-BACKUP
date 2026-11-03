@@ -26,7 +26,7 @@ return new class extends Migration
         }
 
         if (! Schema::hasColumn('users', 'role')) {
-            Schema::table('users', fn (Blueprint $table) => $table->enum('role', ['admin', 'siswa'])->default('siswa'));
+            Schema::table('users', fn (Blueprint $table) => $table->enum('role', ['admin', 'siswa', 'teknisi'])->default('siswa'));
         }
 
         if (Schema::hasColumn('users', 'nis_nip')) {

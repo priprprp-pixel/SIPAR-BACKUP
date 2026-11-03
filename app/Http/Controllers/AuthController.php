@@ -21,7 +21,7 @@ class AuthController extends Controller
         $credentials = $request->validate([
             'identity' => ['required', 'string'],
             'password' => ['required', 'string'],
-            'role' => ['required', Rule::in(['admin', 'siswa'])],
+            'role' => ['required', Rule::in(['admin', 'teknisi', 'siswa'])],
         ]);
 
         $column = filter_var($credentials['identity'], FILTER_VALIDATE_EMAIL) ? 'email' : 'nis_nip';

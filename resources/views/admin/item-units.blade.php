@@ -23,7 +23,17 @@
             </div></td>
         </tr>
     @empty
-        <tr><td colspan="6" class="text-center text-muted py-4">Belum ada unit fisik.</td></tr>
+        <tr><td colspan="6" class="text-center py-4">
+            @if($selectedEquipment)
+                <strong>Belum ada unit fisik untuk {{ $selectedEquipment->kode_alat }} · {{ $selectedEquipment->nama_alat }}.</strong>
+                <div class="text-muted small mt-1">Tambahkan Asset ID satu per unit, misalnya {{ $selectedEquipment->kode_alat }}-01.</div>
+                <button class="btn btn-primary btn-sm mt-3" data-bs-toggle="modal" data-bs-target="#newItemUnit"><i class="bi bi-plus-lg me-1"></i>Tambah unit untuk alat ini</button>
+            @else
+                <strong>Belum ada unit fisik.</strong>
+                <div class="text-muted small mt-1">Unit fisik dipakai untuk mengikat Asset ID saat Teknisi menyetujui peminjaman.</div>
+                <button class="btn btn-primary btn-sm mt-3" data-bs-toggle="modal" data-bs-target="#newItemUnit"><i class="bi bi-plus-lg me-1"></i>Tambah unit pertama</button>
+            @endif
+        </td></tr>
     @endforelse
     </tbody>
 </table></div><div class="p-3">{{ $units->links() }}</div></section>
@@ -36,7 +46,7 @@
 @endforeach
 <div class="modal fade" id="newItemUnit" tabindex="-1"><div class="modal-dialog modal-dialog-centered equipment-modal-dialog"><form class="modal-content" method="post" action="{{ route('admin.item-units.store') }}">@csrf
     <div class="modal-header"><h2 class="modal-title fs-6 fw-bold">Tambah Unit Fisik</h2><button class="btn-close" type="button" data-bs-dismiss="modal"></button></div>
-    <div class="modal-body">@include('admin.item-units-fields', ['unit' => null])</div>
+    <div class="modal-body">@include('admin.item-units-fields', ['unit' => $selectedEquipment ? (object) ['alat_id' => $selectedEquipment->id_alat] : null])</div>
     <div class="modal-footer"><button class="btn btn-light" type="button" data-bs-dismiss="modal">Batal</button><button class="btn btn-primary" type="submit">Simpan unit</button></div>
 </form></div></div>
 @endsection

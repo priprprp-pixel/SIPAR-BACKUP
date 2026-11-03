@@ -33,11 +33,14 @@ class MasterDataController extends Controller
 
     public function itemUnits(Request $request): View
     {
+        $term = $request->string('q')->trim()->toString();
         $units = ItemUnit::with('alat')
-            ->when($request->string('q')->trim()->isNotEmpty(), function ($query) use ($request): void {
-                $term = '%'.$request->string('q')->trim().'%';
-                $query->where('asset_id', 'like', $term)
-                    ->orWhereHas('alat', fn ($alat) => $alat->where('nama_alat', 'like', $term)->orWhere('kode_alat', 'like', $term));
+            ->when($term !== '', function ($query) use ($term): void {
+                $likeTerm = '%'.$term.'%';
+                $query->where(function ($scopedQuery) use ($likeTerm): void {
+                    $scopedQuery->where('asset_id', 'like', $likeTerm)
+                        ->orWhereHas('alat', fn ($alat) => $alat->where('nama_alat', 'like', $likeTerm)->orWhere('kode_alat', 'like', $likeTerm));
+                });
             })
             ->orderBy('asset_id')
             ->paginate(20)
@@ -46,6 +49,9 @@ class MasterDataController extends Controller
         return view('admin.item-units', [
             'units' => $units,
             'equipment' => Alat::orderBy('nama_alat')->get(),
+            'selectedEquipment' => $term !== ''
+                ? Alat::where('kode_alat', $term)->orWhere('nama_alat', 'like', '%'.$term.'%')->first()
+                : null,
         ]);
     }
 

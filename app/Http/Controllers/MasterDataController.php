@@ -13,6 +13,8 @@ use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 use Maatwebsite\Excel\Facades\Excel;
 
@@ -55,11 +57,16 @@ class MasterDataController extends Controller
             'condition' => ['required', Rule::in(['Baik', 'Maintenance', 'Rusak'])],
             'status' => ['required', Rule::in(['Tersedia', 'Dipinjam'])],
         ]);
-        if ($data['status'] === 'Dipinjam' && $data['condition'] !== 'Baik') {
-            return back()->withErrors(['status' => 'Unit rusak atau maintenance tidak boleh langsung berstatus Dipinjam.'])->withInput();
+        if ($data['status'] === 'Dipinjam') {
+            return back()->withErrors(['status' => 'Unit baru harus berstatus Tersedia. Status Dipinjam hanya ditetapkan saat approval teknisi.'])->withInput();
         }
 
-        ItemUnit::create($data);
+        DB::transaction(function () use ($data): void {
+            $equipment = Alat::whereKey($data['alat_id'])->lockForUpdate()->firstOrFail();
+            ItemUnit::create($data);
+            $equipment->syncStockFromItemUnits();
+            $equipment->save();
+        });
 
         return back()->with('success', 'Unit fisik berhasil ditambahkan.');
     }
@@ -76,11 +83,33 @@ class MasterDataController extends Controller
         if ($itemUnit->status === 'Dipinjam' && $data['status'] !== 'Dipinjam') {
             return back()->withErrors(['status' => 'Unit yang sedang dipinjam hanya dapat diubah saat proses pengembalian.']);
         }
+        if ($itemUnit->status === 'Dipinjam' && (
+            (int) $data['alat_id'] !== (int) $itemUnit->alat_id
+            || $data['asset_id'] !== $itemUnit->asset_id
+            || $data['qr_code'] !== $itemUnit->qr_code
+            || $data['condition'] !== $itemUnit->condition
+        )) {
+            return back()->withErrors(['status' => 'Identitas dan kondisi unit yang sedang dipinjam tidak dapat diubah.']);
+        }
         if ($data['status'] === 'Dipinjam' && $data['condition'] !== 'Baik') {
             return back()->withErrors(['status' => 'Unit rusak atau maintenance tidak boleh berstatus Dipinjam.'])->withInput();
         }
 
-        $itemUnit->update($data);
+        DB::transaction(function () use ($itemUnit, $data): void {
+            $unit = ItemUnit::whereKey($itemUnit->item_unit_id)->lockForUpdate()->firstOrFail();
+            $oldEquipment = Alat::whereKey($unit->alat_id)->lockForUpdate()->firstOrFail();
+            if ($unit->alat_id !== (int) $data['alat_id'] && $unit->details()->exists()) {
+                throw ValidationException::withMessages(['alat_id' => 'Unit yang pernah dipinjam tidak dapat dipindahkan ke alat lain.']);
+            }
+            $unit->update($data);
+            $oldEquipment->syncStockFromItemUnits();
+            $oldEquipment->save();
+            if ($oldEquipment->id_alat !== (int) $data['alat_id']) {
+                $newEquipment = Alat::whereKey($data['alat_id'])->lockForUpdate()->firstOrFail();
+                $newEquipment->syncStockFromItemUnits();
+                $newEquipment->save();
+            }
+        });
 
         return back()->with('success', 'Unit fisik berhasil diperbarui.');
     }
@@ -90,7 +119,13 @@ class MasterDataController extends Controller
         if ($itemUnit->status === 'Dipinjam' || $itemUnit->details()->exists()) {
             return back()->withErrors(['unit' => 'Unit yang sedang atau pernah dipinjam tidak dapat dihapus.']);
         }
-        $itemUnit->delete();
+        DB::transaction(function () use ($itemUnit): void {
+            $unit = ItemUnit::whereKey($itemUnit->item_unit_id)->lockForUpdate()->firstOrFail();
+            $equipment = Alat::whereKey($unit->alat_id)->lockForUpdate()->firstOrFail();
+            $unit->delete();
+            $equipment->syncStockFromItemUnits();
+            $equipment->save();
+        });
 
         return back()->with('success', 'Unit fisik berhasil dihapus.');
     }

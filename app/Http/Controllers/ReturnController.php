@@ -82,17 +82,11 @@ class ReturnController extends Controller
         $photoRules = $request->user()?->role === 'teknisi'
             ? ['required', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120']
             : ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120'];
-        $itemUnitRule = $request->user()?->role === 'teknisi'
-            ? ['required', 'integer', 'exists:item_units,item_unit_id']
-            : ['nullable', 'integer', 'exists:item_units,item_unit_id'];
-        $quantityRule = $request->user()?->role === 'teknisi'
-            ? ['nullable', 'integer', 'min:1', 'max:1']
-            : ['nullable', 'integer', 'min:1', 'max:10000'];
         $data = $request->validate([
             'id_peminjaman' => ['required', 'integer', 'exists:peminjaman,id_peminjaman'],
             'id_detail' => ['nullable', 'integer', 'exists:detail_peminjaman,id_detail'],
-            'item_unit_id' => $itemUnitRule,
-            'jumlah' => $quantityRule,
+            'item_unit_id' => ['nullable', 'integer', 'exists:item_units,item_unit_id'],
+            'jumlah' => ['nullable', 'integer', 'min:1', 'max:10000'],
             'qr_code' => ['nullable', 'required_without:kode_alat', 'string', 'exists:alat,qr_code'],
             'kode_alat' => ['nullable', 'required_without:qr_code', 'string', 'exists:alat,kode_alat'],
             'tanggal_kembali_aktual' => ['nullable', 'date', 'before_or_equal:now'],
@@ -110,8 +104,9 @@ class ReturnController extends Controller
 
         $fine = 0;
         $completed = false;
+        $requiresHandover = $request->user()->role === 'teknisi';
         try {
-            DB::transaction(function () use ($data, &$fine, &$completed) {
+            DB::transaction(function () use ($data, $requiresHandover, &$fine, &$completed) {
                 $loan = Peminjaman::whereKey($data['id_peminjaman'])->lockForUpdate()->firstOrFail();
                 if ($loan->status !== 'Approved' || $loan->pengembalian()->exists()) {
                     throw ValidationException::withMessages(['id_peminjaman' => 'Transaksi ini sudah selesai atau tidak sedang dipinjam.']);
@@ -125,6 +120,11 @@ class ReturnController extends Controller
                 if (! $detail) {
                     throw ValidationException::withMessages(['qr_code' => 'QR alat tidak sesuai dengan item pada transaksi ini.']);
                 }
+                $assignedUnits = $detail->itemUnits()->where('status', 'Dipinjam')->lockForUpdate()->get();
+                $hasAssignedUnits = $assignedUnits->isNotEmpty();
+                if ($hasAssignedUnits && empty($data['item_unit_id'])) {
+                    throw ValidationException::withMessages(['item_unit_id' => 'Pilih unit fisik yang dikembalikan.']);
+                }
                 $itemUnit = null;
                 if (! empty($data['item_unit_id'])) {
                     $itemUnit = ItemUnit::whereKey($data['item_unit_id'])
@@ -135,13 +135,25 @@ class ReturnController extends Controller
                     if (! $itemUnit) {
                         throw ValidationException::withMessages(['item_unit_id' => 'Unit fisik tidak sesuai transaksi atau sudah dikembalikan.']);
                     }
+                    if (($data['jumlah'] ?? 1) !== 1) {
+                        throw ValidationException::withMessages(['jumlah' => 'Pengembalian unit fisik harus satu unit per proses.']);
+                    }
                 }
 
                 $returnedQuantity = $detail->pengembalianDetail()->sum('jumlah');
                 $remainingQuantity = max(0, $detail->jumlah - $returnedQuantity);
                 $quantity = (int) ($data['jumlah'] ?? $remainingQuantity);
+                if ($hasAssignedUnits && $quantity !== 1) {
+                    throw ValidationException::withMessages(['jumlah' => 'Pengembalian unit fisik harus satu unit per proses.']);
+                }
                 if ($remainingQuantity === 0 || $quantity > $remainingQuantity) {
                     throw ValidationException::withMessages(['jumlah' => 'Jumlah pengembalian melebihi sisa alat pada transaksi.']);
+                }
+                $handedOver = $detail->penyerahanDetail()->sum('jumlah');
+                $returnedBefore = $detail->pengembalianDetail()->sum('jumlah');
+                if (($requiresHandover || $hasAssignedUnits)
+                    && $handedOver - $returnedBefore < $quantity) {
+                    throw ValidationException::withMessages(['jumlah' => 'Alat belum tercatat diserahkan atau jumlah pengembalian melebihi penyerahan.']);
                 }
 
                 $returnedAt = isset($data['tanggal_kembali_aktual'])

@@ -42,4 +42,18 @@ class Alat extends Model
             default => 'Rusak',
         };
     }
+
+    public function syncStockFromItemUnits(): void
+    {
+        $units = $this->itemUnits()->get(['condition', 'status']);
+        if ($units->isEmpty()) {
+            return;
+        }
+
+        $this->stok_total = $units->count();
+        $this->stok_tersedia = $units->where('status', 'Tersedia')->where('condition', 'Baik')->count();
+        $this->stok_maintenance = $units->where('condition', 'Maintenance')->count();
+        $this->stok_rusak = $units->where('condition', 'Rusak')->count();
+        $this->syncStatusFromStock();
+    }
 }

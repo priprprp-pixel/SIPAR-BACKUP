@@ -8,16 +8,22 @@ return new class extends Migration
 {
     public function up(): void
     {
+        $password = env('TECHNICIAN_PASSWORD');
+        if (! is_string($password) || strlen($password) < 10) {
+            throw new RuntimeException('TECHNICIAN_PASSWORD wajib diatur dan minimal 10 karakter sebelum migrasi dijalankan.');
+        }
+        $username = env('TECHNICIAN_USERNAME', 'teknisi');
+        $email = env('TECHNICIAN_EMAIL', 'teknisi@sipar.sch.id');
         $account = DB::table('users')
-            ->where('email', 'teknisi@sipar.sch.id')
-            ->orWhere('nis_nip', 'TEKNISI')
+            ->where('email', $email)
+            ->orWhere('nis_nip', $username)
             ->first();
 
         if ($account) {
             DB::table('users')->where('id_user', $account->id_user)->update([
                 'nama' => 'Teknisi SIPAR',
-                'nis_nip' => 'teknisi',
-                'password' => Hash::make('TEKNISI123'),
+                'nis_nip' => $username,
+                'password' => Hash::make($password),
                 'role' => 'teknisi',
                 'updated_at' => now(),
             ]);
@@ -27,9 +33,9 @@ return new class extends Migration
 
         DB::table('users')->insert([
             'nama' => 'Teknisi SIPAR',
-            'nis_nip' => 'teknisi',
-            'email' => 'teknisi@sipar.sch.id',
-            'password' => Hash::make('TEKNISI123'),
+            'nis_nip' => $username,
+            'email' => $email,
+            'password' => Hash::make($password),
             'role' => 'teknisi',
             'created_at' => now(),
             'updated_at' => now(),
@@ -38,6 +44,6 @@ return new class extends Migration
 
     public function down(): void
     {
-        DB::table('users')->where('email', 'teknisi@sipar.sch.id')->delete();
+        DB::table('users')->where('email', env('TECHNICIAN_EMAIL', 'teknisi@sipar.sch.id'))->delete();
     }
 };

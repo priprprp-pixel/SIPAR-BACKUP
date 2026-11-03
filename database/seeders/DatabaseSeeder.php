@@ -23,9 +23,13 @@ class DatabaseSeeder extends Seeder
             'nama' => 'Agus Toolman', 'nis_nip' => 'ADMIN',
             'password' => Hash::make('ADMIN123'), 'role' => 'admin',
         ]);
-        User::updateOrCreate(['email' => 'teknisi@sipar.sch.id'], [
-            'nama' => 'Teknisi SIPAR', 'nis_nip' => 'teknisi',
-            'password' => Hash::make('TEKNISI123'), 'role' => 'teknisi',
+        $technicianPassword = env('TECHNICIAN_PASSWORD');
+        if (! is_string($technicianPassword) || strlen($technicianPassword) < 10) {
+            throw new RuntimeException('TECHNICIAN_PASSWORD wajib diatur dan minimal 10 karakter sebelum seeder dijalankan.');
+        }
+        User::updateOrCreate(['email' => env('TECHNICIAN_EMAIL', 'teknisi@sipar.sch.id')], [
+            'nama' => 'Teknisi SIPAR', 'nis_nip' => env('TECHNICIAN_USERNAME', 'teknisi'),
+            'password' => Hash::make($technicianPassword), 'role' => 'teknisi',
         ]);
         User::firstOrCreate(['email' => 'siswa@sipar.sch.id'], [
             'nama' => 'Rangga Saputra', 'nis_nip' => '20230001',

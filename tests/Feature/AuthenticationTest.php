@@ -27,6 +27,15 @@ class AuthenticationTest extends TestCase
         $this->get(route('dashboard'))->assertOk()->assertSee('Dashboard');
     }
 
+    public function test_provisioned_technician_can_sign_in_with_default_credentials(): void
+    {
+        $this->post(route('login.store'), [
+            'identity' => 'teknisi@sipar.sch.id',
+            'password' => 'TEKNISI123',
+            'role' => 'teknisi',
+        ])->assertRedirect(route('dashboard'));
+    }
+
     public function test_login_page_shows_student_registration_without_seed_instructions(): void
     {
         $this->get(route('login'))

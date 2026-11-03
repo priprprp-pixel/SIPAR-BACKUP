@@ -1,6 +1,6 @@
 # SIPAR
 
-Sistem Informasi Peminjaman Alat RPL SMK Negeri 5 Surakarta. Aplikasi Laravel 12 dengan antarmuka Bootstrap 5, database MySQL, akses berbasis peran, katalog QR, approval peminjaman, pengembalian, dan rekap transaksi.
+Sistem Informasi Peminjaman Alat RPL SMK Negeri 5 Surakarta. Aplikasi Laravel 12 dengan antarmuka Bootstrap 5, database MySQL, akses berbasis peran, katalog berbasis kode alat, approval peminjaman, pengembalian, dan rekap transaksi.
 
 ## Menjalankan aplikasi
 
@@ -14,7 +14,7 @@ Sistem Informasi Peminjaman Alat RPL SMK Negeri 5 Surakarta. Aplikasi Laravel 12
    ```
 
 3. Buat database MySQL bernama `sipar`, lalu atur `DB_DATABASE`, `DB_USERNAME`, dan `DB_PASSWORD` pada `.env`.
-4. Atur `ENABLE_QR_SCANNER=true` pada `.env` untuk mengaktifkan kamera QR pada katalog siswa, atau `ENABLE_QR_SCANNER=false` untuk menggunakan pencarian kode alat manual pada katalog. Pada halaman pengembalian admin, pemindaian QR dan pencarian kode alat manual tersedia bersamaan. Setelah mengubah nilai pada deployment yang memakai config cache, jalankan `php artisan config:clear` atau bangun ulang cache konfigurasi.
+4. Aplikasi menggunakan pencarian kode alat manual pada katalog siswa dan halaman pengembalian admin. Pastikan `ENABLE_QR_SCANNER=false` pada `.env`, lalu jalankan `php artisan config:clear` pada deployment yang memakai config cache.
 5. Jalankan migrasi dan data awal:
 
    ```powershell
@@ -64,12 +64,11 @@ Siswa juga dapat mendaftar sendiri melalui halaman masuk. Pendaftaran publik han
 
 ## Modul
 
-- Admin: dashboard, CRUD alat/kategori/akun siswa, QR unik per alat, approval/tolak pengajuan, dan pengembalian melalui pemindaian QR atau pencarian kode alat manual. Kedua metode pencarian tersedia bersamaan. Pemindaian mengenali QR alat terdaftar dan menampilkan status/stok; formulir pengembalian hanya tersedia jika ada sisa transaksi aktif untuk alat tersebut. Modul juga menyediakan laporan.
-- Siswa: katalog dan pencarian QR (lookup alat tanpa login, hanya menampilkan data katalog), pengajuan dengan validasi stok (tetap wajib login), status/riwayat, profil, serta perubahan password.
+- Admin: dashboard, CRUD alat/kategori/akun siswa, approval/tolak pengajuan, dan pengembalian melalui pencarian kode alat manual. Formulir pengembalian hanya tersedia jika ada sisa transaksi aktif untuk alat tersebut. Modul juga menyediakan laporan.
+- Siswa: katalog dan pencarian kode alat, pengajuan dengan validasi stok (tetap wajib login), status/riwayat, profil, serta perubahan password.
 - Stok baru berkurang saat admin menyetujui pengajuan. Stok dikunci dan diperiksa ulang dalam transaksi database saat pengajuan diproses. Jumlah total direkonsiliasi sebagai tersedia, maintenance, rusak, dan sedang dipinjam.
 - Pengembalian dicatat per alat dan jumlah, sehingga satu transaksi multi-alat dapat dikembalikan bertahap. Status transaksi menjadi `Selesai` setelah seluruh jumlah item kembali. Kondisi `Baik` mengembalikan unit ke stok tersedia, `Rusak` memindahkan unit ke stok maintenance, dan `Hilang` mengurangi stok total. Denda keterlambatan Rp 5.000 per hari dibagi proporsional menurut jumlah item transaksi, dengan koreksi pembulatan saat item terakhir kembali.
 - `Export Excel (.xlsx)` menghasilkan workbook Excel asli melalui Laravel Excel. `Unduh PDF` menghasilkan laporan PDF dari server.
-- Pemindaian kamera membutuhkan izin kamera dan secure context browser (HTTPS atau localhost). QR berisi token unik alat, bukan data pribadi.
 
 ## Pemeriksaan
 

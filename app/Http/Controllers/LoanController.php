@@ -26,8 +26,12 @@ class LoanController extends Controller
 
     public function lookupCatalogQr(string $token): JsonResponse
     {
-        $lookupColumn = config('app.enable_qr_scanner') ? 'qr_code' : 'kode_alat';
-        $equipment = Alat::with('kategori')->where($lookupColumn, $token)->first();
+        $equipment = Alat::with('kategori')
+            ->where(function ($query) use ($token) {
+                $query->where('qr_code', $token)->orWhere('kode_alat', $token);
+            })
+            ->first();
+
         if (! $equipment) {
             return response()->json(['message' => 'Alat tidak ditemukan.'], 404);
         }
@@ -68,8 +72,11 @@ class LoanController extends Controller
                 foreach ($equipmentList as $equipment) {
                     $quantity = (int) $requestedItems[$equipment->id_alat]['jumlah'];
                     if ($equipment->status_alat !== 'Tersedia' || $equipment->stok_tersedia < $quantity) {
+                        $message = $equipment->status_alat !== 'Tersedia'
+                            ? "{$equipment->nama_alat} sedang {$equipment->status_alat} dan tidak dapat dipinjam."
+                            : "Jumlah {$equipment->nama_alat} melebihi stok yang tersedia ({$equipment->stok_tersedia}); pengajuan tidak disimpan.";
                         throw ValidationException::withMessages([
-                            'items' => "Stok {$equipment->nama_alat} tidak mencukupi; pengajuan tidak disimpan.",
+                            'items' => $message,
                         ]);
                     }
                 }

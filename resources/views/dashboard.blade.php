@@ -17,7 +17,7 @@
     </section></div>
     <div class="col-lg-4"><section class="surface p-3 p-md-4 h-100"><h2 class="panel-title">{{ $isAdmin ? 'Inventaris Teratas' : 'Mulai Pinjam' }}</h2><div class="panel-subtitle mb-3">{{ $isAdmin ? 'Ringkasan stok alat' : 'Temukan alat praktik yang Anda perlukan' }}</div>
         @if($isAdmin)@forelse($topAlat as $item)<div class="d-flex align-items-center gap-2 mb-3"><span class="equipment-icon"><i class="bi bi-tools"></i></span><div class="flex-grow-1 min-w-0"><strong class="d-block text-truncate" style="font-size:12px">{{ $item->nama_alat }}</strong><small class="text-muted">{{ $item->kategori->nama_kategori }}</small></div><span class="badge-status {{ $item->stok_tersedia ? 'status-tersedia' : 'status-dipinjam' }}">{{ $item->stok_tersedia }} unit</span></div>@empty<p class="text-muted">Belum ada data alat.</p>@endforelse
-        @else<div class="rounded-2 p-3 mb-3" style="background:#f2f7fb"><span class="equipment-icon mb-3"><i class="bi bi-qr-code-scan"></i></span><h3 class="panel-title">Cari lewat katalog</h3><p class="text-muted mt-2">Lihat stok alat praktik atau pindai QR untuk menemukan alat lebih cepat.</p><a class="btn btn-primary" href="{{ route('catalog') }}">Buka katalog <i class="bi bi-arrow-right ms-1"></i></a></div>@endif
+        @else<div class="rounded-2 p-3 mb-3" style="background:#f2f7fb"><span class="equipment-icon mb-3"><i class="bi bi-search"></i></span><h3 class="panel-title">Cari lewat katalog</h3><p class="text-muted mt-2">Lihat stok alat praktik dan cari berdasarkan kode alat.</p><a class="btn btn-primary" href="{{ route('catalog') }}">Buka katalog <i class="bi bi-arrow-right ms-1"></i></a></div>@endif
     </section></div>
 </div>
 @endsection

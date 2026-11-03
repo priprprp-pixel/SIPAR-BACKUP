@@ -27,9 +27,7 @@ class ReturnController extends Controller
 
     public function lookup(string $token): JsonResponse
     {
-        $equipment = Alat::where('qr_code', $token)
-            ->orWhere('kode_alat', $token)
-            ->first();
+        $equipment = Alat::where('qr_code', $token)->orWhere('kode_alat', $token)->first();
         if (! $equipment) {
             return response()->json(['message' => 'Alat tidak ditemukan. Periksa QR atau kode alat.'], 404);
         }
@@ -67,7 +65,6 @@ class ReturnController extends Controller
             'status' => $equipment->status_alat,
             'stok_tersedia' => $equipment->stok_tersedia,
             'stok_total' => $equipment->stok_total,
-            'qr_code' => $equipment->qr_code,
             'peminjaman' => $loans,
         ];
 

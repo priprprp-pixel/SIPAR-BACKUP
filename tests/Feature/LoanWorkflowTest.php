@@ -10,6 +10,7 @@ use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
 class LoanWorkflowTest extends TestCase
@@ -381,6 +382,48 @@ class LoanWorkflowTest extends TestCase
         $this->assertSame('Approved', $loan->fresh()->status);
         $this->assertSame(1, $equipment->fresh()->stok_tersedia);
         $this->assertSame(0, $detail->pengembalianDetail()->count());
+    }
+
+    public function test_partial_technician_return_restores_stock_without_admin_approval(): void
+    {
+        Storage::fake('public');
+        $category = KategoriAlat::create(['nama_kategori' => 'Jaringan']);
+        $equipment = Alat::create([
+            'kode_alat' => 'RETURN-PARTIAL', 'nama_alat' => 'Alat Bertahap', 'id_kategori' => $category->id_kategori,
+            'stok_total' => 2, 'stok_tersedia' => 0, 'stok_maintenance' => 0, 'stok_rusak' => 0,
+            'kondisi' => 'Baik', 'qr_code' => 'qr-return-partial', 'status_alat' => 'Dipinjam',
+        ]);
+        $student = User::factory()->create(['role' => 'siswa']);
+        $technician = User::factory()->create(['role' => 'teknisi']);
+        $loan = Peminjaman::create([
+            'id_user' => $student->id_user,
+            'tanggal_pinjam' => now()->toDateString(),
+            'tanggal_kembali_rencana' => now()->addDay()->toDateString(),
+            'keperluan' => 'Tes pengembalian bertahap',
+            'status' => 'Approved',
+        ]);
+        $detail = $loan->detail()->create(['id_alat' => $equipment->id_alat, 'jumlah' => 2]);
+        DetailPenyerahan::create([
+            'id_detail' => $detail->id_detail,
+            'id_teknisi' => $technician->id_user,
+            'jumlah' => 2,
+            'tanggal_penyerahan' => now(),
+            'kondisi_alat' => 'Baik',
+        ]);
+
+        $this->actingAs($technician)->post(route('technician.returns.store'), [
+            'id_peminjaman' => $loan->id_peminjaman,
+            'id_detail' => $detail->id_detail,
+            'jumlah' => 1,
+            'kode_alat' => $equipment->kode_alat,
+            'kondisi_alat' => 'Baik',
+            'foto_bukti' => UploadedFile::fake()->create('return-partial.jpg', 10, 'image/jpeg'),
+        ])->assertRedirect(route('technician.returns'));
+
+        $this->assertSame(1, $equipment->fresh()->stok_tersedia);
+        $this->assertSame(1, $detail->pengembalianDetail()->sum('jumlah'));
+        $this->assertSame('Approved', $loan->fresh()->status);
+        $this->assertDatabaseMissing('pengembalian', ['id_peminjaman' => $loan->id_peminjaman]);
     }
 
     public function test_return_search_distinguishes_unknown_and_unborrowed_equipment(): void

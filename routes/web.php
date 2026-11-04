@@ -53,8 +53,6 @@ Route::middleware('auth')->group(function () {
         Route::get('/verifikasi', [LoanController::class, 'approvals'])->name('approvals');
         Route::post('/verifikasi/{peminjaman}/setujui', [LoanController::class, 'approve'])->name('approvals.approve');
         Route::post('/verifikasi/{peminjaman}/tolak', [LoanController::class, 'reject'])->name('approvals.reject');
-        Route::get('/pengembalian/verifikasi', [ReturnController::class, 'verificationIndex'])->name('returns.verify');
-        Route::post('/pengembalian/verifikasi/{return}/setujui', [ReturnController::class, 'approveReturn'])->name('returns.verify.approve');
         Route::get('/laporan', [ReportController::class, 'index'])->name('reports');
         Route::get('/laporan/export.xlsx', [ReportController::class, 'excel'])->name('reports.xlsx');
         Route::get('/laporan/pdf', [ReportController::class, 'pdf'])->name('reports.pdf');

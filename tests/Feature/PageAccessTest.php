@@ -31,14 +31,16 @@ class PageAccessTest extends TestCase
             ->assertSee('id="mobileNavigation"', false)
             ->assertSee(route('admin.categories'), false)
             ->assertSee(route('admin.students'), false)
-            ->assertSee(route('admin.reports'), false);
+            ->assertSee(route('admin.reports'), false)
+            ->assertDontSee('Verifikasi Pengembalian');
         foreach ([
             route('dashboard'), route('admin.equipment'), route('admin.categories'), route('admin.students'),
-            route('admin.approvals'), route('admin.returns.verify'),
+            route('admin.approvals'),
             route('admin.reports'), route('admin.reports.xlsx'), route('profile'),
         ] as $url) {
             $this->get($url)->assertOk();
         }
+        $this->get('/admin/pengembalian/verifikasi')->assertNotFound();
         $this->get('/admin/pengembalian')->assertNotFound();
         $this->get('/admin/pengembalian/cari')->assertNotFound();
     }

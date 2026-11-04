@@ -24,8 +24,20 @@ class ReportController extends Controller
         if ($request->filled('status') && in_array($request->input('status'), ['Pending', 'Approved', 'Rejected', 'Cancelled', 'Selesai'], true)) {
             $query->where('status', $request->input('status'));
         }
-        $summaryLoans = (clone $query)->with(['detail.pengembalianDetail', 'pengembalian'])->get();
-        $loans = $query->with(['detail.pengembalianDetail'])->paginate(20)->withQueryString();
+        $summaryLoans = (clone $query)
+            ->with(['detail.alat', 'detail.pengembalianDetail.teknisi', 'pengembalian'])
+            ->get();
+        $loans = $query->with(['detail.alat', 'detail.pengembalianDetail.teknisi'])->paginate(20)->withQueryString();
+        $returnHistory = $summaryLoans
+            ->flatMap(fn (Peminjaman $loan) => $loan->detail->flatMap(
+                fn ($detail) => $detail->pengembalianDetail->map(fn ($return) => [
+                    'loan' => $loan,
+                    'detail' => $detail,
+                    'return' => $return,
+                ])
+            ))
+            ->sortByDesc(fn (array $entry) => $entry['return']->tanggal_kembali_aktual)
+            ->values();
         $totalFine = $summaryLoans->sum(function (Peminjaman $loan): float {
             $detailFine = $loan->detail->flatMap(fn ($detail) => $detail->pengembalianDetail)->sum('denda');
 
@@ -34,6 +46,7 @@ class ReportController extends Controller
 
         return view('admin.reports', [
             'loans' => $loans,
+            'returnHistory' => $returnHistory,
             'approvedCount' => $summaryLoans->whereIn('status', ['Approved', 'Selesai'])->count(),
             'pendingCount' => $summaryLoans->where('status', 'Pending')->count(),
             'totalFine' => $totalFine,

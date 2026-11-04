@@ -58,8 +58,7 @@ class LoanController extends Controller
                         SELECT COALESCE(SUM(detail_pengembalian.jumlah), 0)
                         FROM detail_pengembalian
                         WHERE detail_pengembalian.id_detail = detail_peminjaman.id_detail
-                            AND detail_pengembalian.status_verifikasi = ?
-                    )', ['Approved'])
+                    )')
                     ->first();
                 if ($activeDetail) {
                     throw ValidationException::withMessages([

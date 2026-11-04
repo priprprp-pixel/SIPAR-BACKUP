@@ -40,6 +40,27 @@ class StockStateTest extends TestCase
         Storage::disk('public')->assertExists($photo);
     }
 
+    public function test_missing_equipment_photo_uses_fallback_in_admin_and_catalog(): void
+    {
+        Storage::fake('public');
+        $category = KategoriAlat::create(['nama_kategori' => 'Jaringan']);
+        $equipment = Alat::create([
+            'kode_alat' => 'PHOTO-MISSING', 'nama_alat' => 'Foto Hilang', 'id_kategori' => $category->id_kategori,
+            'stok_total' => 1, 'stok_tersedia' => 1, 'kondisi' => 'Baik', 'foto' => 'alat/missing.jpg',
+            'qr_code' => 'qr-photo-missing', 'status_alat' => 'Tersedia',
+        ]);
+        $admin = User::factory()->create(['role' => 'admin']);
+        $student = User::factory()->create(['role' => 'siswa']);
+
+        $this->actingAs($admin)->get(route('admin.equipment'))
+            ->assertOk()
+            ->assertSee('equipment-photo-placeholder');
+        $this->actingAs($student)->get(route('catalog'))
+            ->assertOk()
+            ->assertSee('equipment-photo-placeholder');
+        $this->assertDatabaseHas('alat', ['id_alat' => $equipment->id_alat, 'foto' => 'alat/missing.jpg']);
+    }
+
     public function test_marking_equipment_for_maintenance_preserves_borrowed_count_and_can_restore_stock(): void
     {
         $admin = User::factory()->create(['role' => 'admin']);

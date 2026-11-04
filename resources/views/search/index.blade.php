@@ -15,7 +15,7 @@
                 <h2 class="panel-title mb-3">Alat <span class="text-muted">({{ $equipment->count() }})</span></h2>
                 @forelse($equipment as $item)
                     <div class="d-flex justify-content-between gap-3 border-bottom py-2">
-                        <div><strong>{{ $item->nama_alat }}</strong><div class="panel-subtitle">{{ $item->kode_alat }} · {{ $item->kategori->nama_kategori }}</div></div>
+                        <div class="d-flex align-items-center gap-2"><span class="equipment-icon overflow-hidden"><x-equipment-image :equipment="$item" alt="Foto {{ $item->nama_alat }}"></x-equipment-image></span><div><strong>{{ $item->nama_alat }}</strong><div class="panel-subtitle">{{ $item->kode_alat }} · {{ $item->kategori->nama_kategori }}</div></div></div>
                         <a class="btn btn-light btn-sm align-self-center" href="{{ $isAdmin ? route('admin.equipment', ['q' => $item->kode_alat]) : route('catalog', ['q' => $item->kode_alat]) }}">Buka</a>
                     </div>
                 @empty

@@ -10,7 +10,7 @@
             @foreach($loan->detail as $detail)
                 @php($handed = $detail->penyerahanDetail->sum('jumlah'))
                 @if($handed < $detail->jumlah)
-                    <tr><td>PJM-{{ str_pad($loan->id_peminjaman, 5, '0', STR_PAD_LEFT) }}</td><td>{{ $loan->user->nama }}<small class="d-block text-muted">{{ $loan->user->nis_nip }}</small></td><td><span class="badge-status status-dipinjam">{{ $detail->alat->kode_alat }}</span></td><td>{{ $detail->alat->nama_alat }}<small class="d-block text-muted">{{ $handed }}/{{ $detail->jumlah }} unit diserahkan</small></td><td>{{ $loan->tanggal_kembali_rencana->format('d M Y') }}</td><td><button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#handover-{{ $detail->id_detail }}">Catat penyerahan</button></td></tr>
+                    <tr><td>PJM-{{ str_pad($loan->id_peminjaman, 5, '0', STR_PAD_LEFT) }}</td><td>{{ $loan->user->nama }}<small class="d-block text-muted">{{ $loan->user->nis_nip }}</small></td><td><span class="badge-status status-dipinjam">{{ $detail->alat->kode_alat }}</span></td><td><div class="d-flex align-items-center gap-2"><span class="equipment-icon overflow-hidden"><x-equipment-image :equipment="$detail->alat" alt="Foto {{ $detail->alat->nama_alat }}"></x-equipment-image></span><span>{{ $detail->alat->nama_alat }}<small class="d-block text-muted">{{ $handed }}/{{ $detail->jumlah }} unit diserahkan</small></span></div></td><td>{{ $loan->tanggal_kembali_rencana->format('d M Y') }}</td><td><button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#handover-{{ $detail->id_detail }}">Catat penyerahan</button></td></tr>
                 @endif
             @endforeach
         @empty

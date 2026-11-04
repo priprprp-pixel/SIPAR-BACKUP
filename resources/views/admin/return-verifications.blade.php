@@ -15,7 +15,7 @@
                 <tr>
                     <td>PJM-{{ str_pad($return->detailPeminjaman->peminjaman->id_peminjaman, 5, '0', STR_PAD_LEFT) }}<small class="d-block text-muted">{{ $return->tanggal_kembali_aktual->format('d M Y H:i') }}</small></td>
                     <td>{{ $return->detailPeminjaman->peminjaman->user->nama }}</td>
-                    <td>{{ $return->detailPeminjaman->alat->nama_alat }} × {{ $return->jumlah }} @if($return->itemUnit)<small class="d-block text-muted">{{ $return->itemUnit->asset_id }}</small>@endif</td>
+                    <td><div class="d-flex align-items-center gap-2"><span class="equipment-icon overflow-hidden"><x-equipment-image :equipment="$return->detailPeminjaman->alat" alt="Foto {{ $return->detailPeminjaman->alat->nama_alat }}"></x-equipment-image></span><span>{{ $return->detailPeminjaman->alat->nama_alat }} × {{ $return->jumlah }} @if($return->itemUnit)<small class="d-block text-muted">{{ $return->itemUnit->asset_id }}</small>@endif</span></div></td>
                     <td>{{ $return->teknisi?->nama ?? '-' }}</td>
                     <td><span class="badge-status status-{{ strtolower($return->kondisi_alat) }}">{{ $return->kondisi_alat }}</span></td>
                     <td>@if($return->foto_bukti)<a href="{{ asset('storage/'.$return->foto_bukti) }}" target="_blank" rel="noopener">Lihat foto</a>@else<span class="text-muted">-</span>@endif</td>

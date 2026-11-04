@@ -23,6 +23,9 @@
         .workspace,.content,.surface{min-width:0}
         .equipment-photo-placeholder:not([hidden]){display:grid;place-items:center;background:#eaf3ff;color:#176ec5;font-size:1.15rem}
         .equipment-icon .equipment-photo{width:100%;height:100%;object-fit:cover}
+        .equipment-form-photo-preview{width:min(100%,240px);aspect-ratio:4/3;display:flex;align-items:center;justify-content:center;overflow:hidden;margin-inline:auto;border:1px solid var(--line);border-radius:8px;background:#f7f9fb}
+        .equipment-form-photo-preview img{display:block;width:100%;height:100%;object-fit:contain;object-position:center}
+        .equipment-form-photo-preview[hidden],.equipment-form-photo-preview img[hidden]{display:none}
         .pagination svg{width:1rem;height:1rem;display:block}
         .pagination .page-link{display:flex;align-items:center;justify-content:center;min-width:2.25rem}
         .page-head{flex-wrap:wrap;align-items:flex-start}

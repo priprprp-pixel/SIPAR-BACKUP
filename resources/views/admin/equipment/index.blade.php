@@ -12,3 +12,49 @@
 @endforeach
 <div class="modal fade" id="addEquipment" tabindex="-1" aria-labelledby="add-equipment-title" aria-hidden="true"><div class="modal-dialog modal-dialog-centered equipment-modal-dialog"><form class="modal-content" method="post" enctype="multipart/form-data" action="{{ route('admin.equipment.store') }}">@csrf<div class="modal-header"><h2 class="modal-title fs-6 fw-bold" id="add-equipment-title">Tambah alat</h2><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Tutup"></button></div><div class="modal-body">@include('admin.equipment.fields',['item'=>null])</div><div class="modal-footer"><button type="button" class="btn btn-light" data-bs-dismiss="modal">Batal</button><button type="submit" class="btn btn-primary">Simpan alat</button></div></form></div></div>
 @endsection
+@push('scripts')
+<script>
+document.querySelectorAll('[data-equipment-photo-input]').forEach((input) => {
+    const field = input.closest('.col-12');
+    const preview = field.querySelector('[data-equipment-photo-preview]');
+    const image = preview.querySelector('img');
+    let previewUrl = null;
+
+    const resetPreview = () => {
+        input.value = '';
+        if (previewUrl) {
+            URL.revokeObjectURL(previewUrl);
+            previewUrl = null;
+        }
+
+        const originalSrc = image.dataset.originalSrc;
+        if (originalSrc) {
+            image.src = originalSrc;
+            image.hidden = false;
+            preview.hidden = false;
+        } else {
+            image.removeAttribute('src');
+            image.hidden = true;
+            preview.hidden = true;
+        }
+    };
+
+    input.addEventListener('change', () => {
+        const file = input.files?.[0];
+        if (!file || !file.type.startsWith('image/')) {
+            return;
+        }
+
+        if (previewUrl) {
+            URL.revokeObjectURL(previewUrl);
+        }
+        previewUrl = URL.createObjectURL(file);
+        image.src = previewUrl;
+        image.hidden = false;
+        preview.hidden = false;
+    });
+
+    input.closest('.modal').addEventListener('hidden.bs.modal', resetPreview);
+});
+</script>
+@endpush

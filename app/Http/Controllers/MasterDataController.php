@@ -71,15 +71,6 @@ class MasterDataController extends Controller
             'foto' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
             'status_alat' => ['required', Rule::in(['Tersedia', 'Maintenance', 'Rusak'])],
         ]);
-        if ($request->hasFile('foto')) {
-            $newPhoto = $request->file('foto')->store('alat', 'public');
-            if ($alat->foto) {
-                Storage::disk('public')->delete($alat->foto);
-            }
-            $data['foto'] = $newPhoto;
-        } else {
-            unset($data['foto']);
-        }
         $borrowed = max(0, $alat->stok_total - $alat->stok_tersedia - $alat->stok_maintenance - $alat->stok_rusak);
         $statusChanged = $data['status_alat'] !== $alat->status_alat;
 
@@ -106,7 +97,16 @@ class MasterDataController extends Controller
             $data['stok_maintenance'] = 0;
             $data['stok_rusak'] = $data['stok_total'] - $borrowed;
         }
+        $oldPhoto = $alat->foto;
+        if ($request->hasFile('foto')) {
+            $data['foto'] = $request->file('foto')->store('alat', 'public');
+        } else {
+            unset($data['foto']);
+        }
         $alat->update($data);
+        if ($request->hasFile('foto') && $oldPhoto) {
+            Storage::disk('public')->delete($oldPhoto);
+        }
 
         return back()->with('success', 'Data alat berhasil diperbarui.');
     }

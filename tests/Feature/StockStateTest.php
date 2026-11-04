@@ -41,6 +41,32 @@ class StockStateTest extends TestCase
         Storage::disk('public')->assertExists($photo);
     }
 
+    public function test_failed_equipment_update_keeps_the_existing_photo(): void
+    {
+        Storage::fake('public');
+        Storage::disk('public')->put('alat/lama.jpg', 'foto lama');
+        $admin = User::factory()->create(['role' => 'admin']);
+        $category = KategoriAlat::create(['nama_kategori' => 'Jaringan']);
+        $equipment = Alat::create([
+            'kode_alat' => 'PHOTO-02', 'nama_alat' => 'Alat Foto', 'id_kategori' => $category->id_kategori,
+            'stok_total' => 3, 'stok_tersedia' => 1, 'stok_maintenance' => 1, 'kondisi' => 'Baik',
+            'foto' => 'alat/lama.jpg', 'qr_code' => 'qr-photo-02', 'status_alat' => 'Tersedia',
+        ]);
+
+        $this->actingAs($admin)->put(route('admin.equipment.update', $equipment), [
+            'kode_alat' => $equipment->kode_alat,
+            'nama_alat' => $equipment->nama_alat,
+            'id_kategori' => $category->id_kategori,
+            'stok_total' => 1,
+            'kondisi' => 'Baik',
+            'status_alat' => 'Tersedia',
+            'foto' => UploadedFile::fake()->create('alat-baru.jpg', 100, 'image/jpeg'),
+        ])->assertSessionHasErrors('stok_total');
+
+        $this->assertSame('alat/lama.jpg', $equipment->fresh()->foto);
+        Storage::disk('public')->assertExists('alat/lama.jpg');
+    }
+
     public function test_missing_equipment_photo_uses_fallback_in_admin_and_catalog(): void
     {
         Storage::fake('public');

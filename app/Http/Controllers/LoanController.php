@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Alat;
+use App\Models\DetailPeminjaman;
 use App\Models\Peminjaman;
 use App\Models\ItemUnit;
 use Illuminate\Database\QueryException;
@@ -47,6 +48,24 @@ class LoanController extends Controller
             DB::transaction(function () use ($request, $data) {
                 $requestedItems = collect($data['items'])->keyBy(fn (array $item) => (int) $item['id_alat']);
                 $equipmentList = Alat::whereIn('id_alat', $requestedItems->keys())->orderBy('id_alat')->lockForUpdate()->get();
+
+                $activeDetail = DetailPeminjaman::with('alat')
+                    ->whereIn('id_alat', $requestedItems->keys())
+                    ->whereHas('peminjaman', fn ($query) => $query
+                        ->where('id_user', $request->user()->id_user)
+                        ->whereIn('status', ['Pending', 'Approved']))
+                    ->whereRaw('detail_peminjaman.jumlah > (
+                        SELECT COALESCE(SUM(detail_pengembalian.jumlah), 0)
+                        FROM detail_pengembalian
+                        WHERE detail_pengembalian.id_detail = detail_peminjaman.id_detail
+                            AND detail_pengembalian.status_verifikasi = ?
+                    )', ['Approved'])
+                    ->first();
+                if ($activeDetail) {
+                    throw ValidationException::withMessages([
+                        'items' => "Anda masih memiliki pengajuan atau peminjaman aktif untuk {$activeDetail->alat->nama_alat}. Alat yang sama baru dapat diajukan kembali setelah dikembalikan.",
+                    ]);
+                }
 
                 foreach ($equipmentList as $equipment) {
                     $quantity = (int) $requestedItems[$equipment->id_alat]['jumlah'];
@@ -96,7 +115,6 @@ class LoanController extends Controller
     {
         $loans = Peminjaman::with(['user', 'detail.alat'])
             ->whereIn('status', ['Pending', 'Approved'])
-            ->whereDoesntHave('detail.alat.itemUnits')
             ->latest('tanggal_pengajuan')->paginate(12);
 
         return view('admin.approvals', compact('loans'));
@@ -116,16 +134,13 @@ class LoanController extends Controller
         return back()->with('success', 'Pengajuan peminjaman berhasil dibatalkan.');
     }
 
-    public function approve(Peminjaman $peminjaman): RedirectResponse
+    public function approve(Request $request, Peminjaman $peminjaman): RedirectResponse
     {
         try {
-            DB::transaction(function () use ($peminjaman) {
+            DB::transaction(function () use ($request, $peminjaman) {
                 $loan = Peminjaman::whereKey($peminjaman->id_peminjaman)->lockForUpdate()->firstOrFail();
                 if ($loan->status !== 'Pending') {
                     throw ValidationException::withMessages(['status' => 'Pengajuan ini sudah diproses.']);
-                }
-                if (ItemUnit::whereIn('alat_id', $loan->detail->pluck('id_alat'))->exists()) {
-                    throw ValidationException::withMessages(['status' => 'Pengajuan dengan unit fisik harus disetujui melalui Teknisi.']);
                 }
 
                 foreach ($loan->detail as $detail) {
@@ -133,6 +148,26 @@ class LoanController extends Controller
                     if ($equipment->status_alat !== 'Tersedia' || $equipment->stok_tersedia < $detail->jumlah) {
                         throw ValidationException::withMessages(['stok' => "Stok {$equipment->nama_alat} tidak lagi mencukupi."]);
                     }
+
+                    if ($equipment->itemUnits()->exists()) {
+                        $units = ItemUnit::where('alat_id', $equipment->id_alat)
+                            ->where('condition', 'Baik')
+                            ->where('status', 'Tersedia')
+                            ->orderBy('asset_id')
+                            ->lockForUpdate()
+                            ->limit($detail->jumlah)
+                            ->get();
+                        if ($units->count() !== $detail->jumlah) {
+                            throw ValidationException::withMessages([
+                                'stok' => "Unit fisik {$equipment->nama_alat} yang berkondisi baik tidak mencukupi.",
+                            ]);
+                        }
+                        $detail->itemUnits()->attach($units->pluck('item_unit_id')->all(), [
+                            'assigned_by' => $request->user()->id_user,
+                        ]);
+                        ItemUnit::whereIn('item_unit_id', $units->pluck('item_unit_id'))->update(['status' => 'Dipinjam']);
+                    }
+
                     $equipment->stok_tersedia -= $detail->jumlah;
                     $equipment->syncStatusFromStock();
                     $equipment->save();

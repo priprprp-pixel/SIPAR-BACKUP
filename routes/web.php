@@ -53,19 +53,14 @@ Route::middleware('auth')->group(function () {
         Route::get('/verifikasi', [LoanController::class, 'approvals'])->name('approvals');
         Route::post('/verifikasi/{peminjaman}/setujui', [LoanController::class, 'approve'])->name('approvals.approve');
         Route::post('/verifikasi/{peminjaman}/tolak', [LoanController::class, 'reject'])->name('approvals.reject');
-        Route::get('/pengembalian', [ReturnController::class, 'index'])->name('returns');
         Route::get('/pengembalian/verifikasi', [ReturnController::class, 'verificationIndex'])->name('returns.verify');
         Route::post('/pengembalian/verifikasi/{return}/setujui', [ReturnController::class, 'approveReturn'])->name('returns.verify.approve');
-        Route::get('/pengembalian/cari', [ReturnController::class, 'search'])->name('returns.search');
-        Route::post('/pengembalian', [ReturnController::class, 'store'])->name('returns.store');
         Route::get('/laporan', [ReportController::class, 'index'])->name('reports');
         Route::get('/laporan/export.xlsx', [ReportController::class, 'excel'])->name('reports.xlsx');
         Route::get('/laporan/pdf', [ReportController::class, 'pdf'])->name('reports.pdf');
     });
 
     Route::prefix('teknisi')->name('technician.')->middleware('role:teknisi')->group(function () {
-        Route::get('/verifikasi', [TechnicianController::class, 'approvals'])->name('approvals');
-        Route::post('/verifikasi/{peminjaman}/setujui', [TechnicianController::class, 'approve'])->name('approvals.approve');
         Route::get('/penyerahan', [TechnicianController::class, 'handovers'])->name('handovers');
         Route::post('/penyerahan/{peminjaman}', [TechnicianController::class, 'storeHandover'])->name('handovers.store');
         Route::get('/pengembalian', [ReturnController::class, 'index'])->name('returns');

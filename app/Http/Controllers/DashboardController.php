@@ -15,8 +15,10 @@ class DashboardController extends Controller
         $isAdmin = $role === 'admin';
         $isTeknisi = $role === 'teknisi';
         $loans = Peminjaman::with(['user', 'detail.alat'])->latest('tanggal_pengajuan');
-        $approvedLoans = Peminjaman::with(['detail.penyerahanDetail', 'detail.pengembalianDetail'])
-            ->where('status', 'Approved')->get();
+        $approvedLoans = $isTeknisi
+            ? Peminjaman::with(['detail.penyerahanDetail', 'detail.pengembalianDetail'])
+                ->where('status', 'Approved')->get()
+            : collect();
 
         if (! $isAdmin && ! $isTeknisi) {
             $loans->where('id_user', $request->user()->id_user);

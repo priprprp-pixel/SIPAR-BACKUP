@@ -14,7 +14,7 @@ Sistem Informasi Peminjaman Alat RPL SMK Negeri 5 Surakarta. Aplikasi Laravel 12
    ```
 
 3. Buat database MySQL bernama `sipar`, lalu atur `DB_DATABASE`, `DB_USERNAME`, dan `DB_PASSWORD` pada `.env`.
-4. Aplikasi menggunakan pencarian kode alat manual pada katalog siswa dan halaman pengembalian admin. Pastikan `ENABLE_QR_SCANNER=false` pada `.env`, lalu jalankan `php artisan config:clear` pada deployment yang memakai config cache.
+4. Aplikasi menggunakan pencarian kode alat manual pada katalog siswa dan halaman pengembalian teknisi. Pastikan `ENABLE_QR_SCANNER=false` pada `.env`, lalu jalankan `php artisan config:clear` pada deployment yang memakai config cache.
 5. Jalankan migrasi dan data awal:
 
    ```powershell
@@ -49,6 +49,8 @@ SQLite di filesystem container Railway tidak cocok untuk penyimpanan permanen ka
 3. Atur **Pre-deploy Command** pada service aplikasi menjadi `php artisan migrate --force` agar migrasi berjalan ke database Railway setiap deploy. Jangan gunakan `migrate:fresh` pada database berisi data.
 4. Deploy ulang, lalu pastikan log deploy menunjukkan migrasi berhasil. Data yang sebelumnya tersimpan di SQLite lokal/container tidak otomatis dipindahkan; impor sekali ke database Railway jika perlu dipertahankan.
 
+Untuk mempertahankan foto alat dan bukti transaksi saat container diganti, tambahkan **Railway Volume** pada service aplikasi dengan mount path `/app/storage/app/public`. Aplikasi menyimpan upload pada disk Laravel `public` dan membuat `public/storage` melalui `php artisan storage:link`; database hanya menyimpan path file, sedangkan isi file harus berada di volume persisten.
+
 Konfigurasi juga mengenali variabel bawaan service MySQL Railway (`MYSQLHOST`, `MYSQLPORT`, `MYSQLDATABASE`, `MYSQLUSER`, `MYSQLPASSWORD`, atau `MYSQL_URL`) sebagai fallback. Tetap set `DB_CONNECTION=mysql` pada service aplikasi agar aplikasi tidak mencoba memakai SQLite.
 
 ## Akun demo
@@ -64,7 +66,8 @@ Siswa juga dapat mendaftar sendiri melalui halaman masuk. Pendaftaran publik han
 
 ## Modul
 
-- Admin: dashboard, CRUD alat/kategori/akun siswa, approval/tolak pengajuan, dan pengembalian melalui pencarian kode alat manual. Formulir pengembalian hanya tersedia jika ada sisa transaksi aktif untuk alat tersebut. Modul juga menyediakan laporan.
+- Admin: dashboard, CRUD alat/kategori/akun siswa, approval/tolak seluruh pengajuan, verifikasi pengembalian lama yang masih berstatus menunggu, dan laporan. Persetujuan alat ber-Asset ID mengunci unit tersedia untuk proses penyerahan.
+- Teknisi: menerima tugas setelah pengajuan Admin disetujui, mencatat penyerahan dan penerimaan fisik dengan bukti foto kamera, memperbarui stok saat pengembalian dicatat, serta melihat counter tugas operasional.
 - Siswa: katalog dan pencarian kode alat, pengajuan dengan validasi stok (tetap wajib login), status/riwayat, profil, serta perubahan password.
 - Stok baru berkurang saat admin menyetujui pengajuan. Stok dikunci dan diperiksa ulang dalam transaksi database saat pengajuan diproses. Jumlah total direkonsiliasi sebagai tersedia, maintenance, rusak, dan sedang dipinjam.
 - Pengembalian dicatat per alat dan jumlah, sehingga satu transaksi multi-alat dapat dikembalikan bertahap. Status transaksi menjadi `Selesai` setelah seluruh jumlah item kembali. Kondisi `Baik` mengembalikan unit ke stok tersedia, `Rusak` memindahkan unit ke stok maintenance, dan `Hilang` mengurangi stok total. Denda keterlambatan Rp 5.000 per hari dibagi proporsional menurut jumlah item transaksi, dengan koreksi pembulatan saat item terakhir kembali.

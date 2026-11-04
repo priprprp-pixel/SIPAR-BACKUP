@@ -91,12 +91,9 @@ class ReturnController extends Controller
     {
         $query = Peminjaman::with(['user', 'detail.alat', 'detail.pengembalianDetail', 'detail.itemUnits'])
             ->where('status', 'Approved');
-        if (auth()->user()->role === 'admin') {
-            $query->whereDoesntHave('detail.itemUnits');
-        }
         $activeLoans = $query->latest('tanggal_pengajuan')->paginate(12);
 
-        return view('admin.returns', compact('activeLoans'));
+        return view('technician.returns', compact('activeLoans'));
     }
 
     public function search(Request $request): JsonResponse
@@ -116,9 +113,6 @@ class ReturnController extends Controller
             ->where('status', 'Approved')
             ->whereHas('detail', fn ($query) => $query->where('id_alat', $equipment->id_alat))
             ;
-        if (auth()->user()->role === 'admin') {
-            $loansQuery->whereDoesntHave('detail.itemUnits');
-        }
         $loans = $loansQuery->get()
             ->flatMap(function (Peminjaman $loan) use ($equipment) {
                 return $loan->detail
@@ -161,9 +155,6 @@ class ReturnController extends Controller
 
     public function store(Request $request): RedirectResponse
     {
-        $photoRules = $request->user()?->role === 'teknisi'
-            ? ['required', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120']
-            : ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120'];
         $data = $request->validate([
             'id_peminjaman' => ['required', 'integer', 'exists:peminjaman,id_peminjaman'],
             'id_detail' => ['nullable', 'integer', 'exists:detail_peminjaman,id_detail'],
@@ -172,20 +163,19 @@ class ReturnController extends Controller
             'kode_alat' => ['required', 'string', 'exists:alat,kode_alat'],
             'tanggal_kembali_aktual' => ['nullable', 'date'],
             'kondisi_alat' => ['required', 'in:Baik,Maintenance,Rusak,Hilang'],
-            'foto_bukti' => $photoRules,
+            'foto_bukti' => ['required', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
             'catatan' => ['nullable', 'string', 'max:2000'],
         ]);
         if ($request->hasFile('foto_bukti')) {
             $data['foto_bukti'] = $request->file('foto_bukti')->store('bukti/pengembalian', 'public');
         }
-        $data['id_teknisi'] = $request->user()->role === 'teknisi' ? $request->user()->id_user : null;
+        $data['id_teknisi'] = $request->user()->id_user;
         $equipment = Alat::where('kode_alat', $data['kode_alat'])->firstOrFail();
 
         $fine = 0;
         $completed = false;
-        $requiresHandover = $request->user()->role === 'teknisi';
         try {
-            DB::transaction(function () use ($data, $requiresHandover, &$fine, &$completed) {
+            DB::transaction(function () use ($data, &$fine, &$completed) {
                 $loan = Peminjaman::whereKey($data['id_peminjaman'])->lockForUpdate()->firstOrFail();
                 if ($loan->status !== 'Approved' || $loan->pengembalian()->exists()) {
                     throw ValidationException::withMessages(['id_peminjaman' => 'Transaksi ini sudah selesai atau tidak sedang dipinjam.']);
@@ -222,7 +212,7 @@ class ReturnController extends Controller
                     }
                 }
 
-                if ($requiresHandover && $detail->pengembalianDetail()->where('status_verifikasi', 'Pending')->exists()) {
+                if ($detail->pengembalianDetail()->where('status_verifikasi', 'Pending')->exists()) {
                     throw ValidationException::withMessages(['id_peminjaman' => 'Pengembalian transaksi ini sedang menunggu verifikasi Admin.']);
                 }
                 $returnedQuantity = $detail->pengembalianDetail()->where('status_verifikasi', 'Approved')->sum('jumlah');
@@ -236,8 +226,7 @@ class ReturnController extends Controller
                 }
                 $handedOver = $detail->penyerahanDetail()->sum('jumlah');
                 $returnedBefore = $detail->pengembalianDetail()->sum('jumlah');
-                if (($requiresHandover || $hasAssignedUnits)
-                    && $handedOver - $returnedBefore < $quantity) {
+                if ($handedOver - $returnedBefore < $quantity) {
                     throw ValidationException::withMessages(['jumlah' => 'Alat belum tercatat diserahkan atau jumlah pengembalian melebihi penyerahan.']);
                 }
 
@@ -267,12 +256,9 @@ class ReturnController extends Controller
                     'foto_bukti' => $data['foto_bukti'] ?? null,
                     'denda' => $fine,
                     'catatan' => $data['catatan'] ?? null,
-                    'status_verifikasi' => $requiresHandover ? 'Pending' : 'Approved',
-                    'id_teknisi' => $requiresHandover ? $data['id_teknisi'] ?? null : null,
+                    'status_verifikasi' => 'Approved',
+                    'id_teknisi' => $data['id_teknisi'],
                 ]);
-                if ($requiresHandover) {
-                    return;
-                }
                 if ($itemUnit) {
                     $itemUnit->update([
                         'status' => 'Tersedia',
@@ -324,9 +310,7 @@ class ReturnController extends Controller
             ? 'Semua alat pada transaksi telah kembali. Denda: Rp '.number_format($fine, 0, ',', '.')
             : 'Pengembalian item dicatat; transaksi tetap aktif sampai seluruh alat kembali. Denda item ini: Rp '.number_format($fine, 0, ',', '.');
 
-        $returnRoute = $request->user()->role === 'teknisi' ? 'technician.returns' : 'admin.returns';
-
-        return redirect()->route($returnRoute)->with('success', $message);
+        return redirect()->route('technician.returns')->with('success', $message);
     }
 
     private function restoreStock(Alat $equipment, int $quantity, string $condition): void

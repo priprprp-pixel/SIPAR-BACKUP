@@ -32,7 +32,9 @@ class TechnicianWorkflowTest extends TestCase
         ]);
         $detail = $loan->detail()->create(['id_alat' => $equipment->id_alat, 'jumlah' => 1]);
 
-        $this->actingAs($technician)->get(route('technician.handovers'))->assertOk();
+        $this->actingAs($technician)->get(route('technician.handovers'))
+            ->assertOk()
+            ->assertSee('capture="environment"', false);
         $handoverData = [
             'id_detail' => $detail->id_detail, 'jumlah' => 1, 'kondisi_alat' => 'Baik',
         ];
@@ -43,6 +45,9 @@ class TechnicianWorkflowTest extends TestCase
             'foto_bukti' => UploadedFile::fake()->create('penyerahan.jpg', 100, 'image/jpeg'),
         ])->assertRedirect();
         $this->assertDatabaseHas('detail_penyerahan', ['id_detail' => $detail->id_detail, 'id_teknisi' => $technician->id_user]);
+        $this->actingAs($technician)->get(route('technician.returns'))
+            ->assertOk()
+            ->assertSee('capture="environment"', false);
         $this->actingAs($technician)->post(route('technician.returns.store'), [
             'id_peminjaman' => $loan->id_peminjaman,
             'id_detail' => $detail->id_detail,
@@ -58,18 +63,16 @@ class TechnicianWorkflowTest extends TestCase
             'kondisi_alat' => 'Baik',
             'foto_bukti' => UploadedFile::fake()->create('pengembalian.jpg', 100, 'image/jpeg'),
         ])->assertRedirect(route('technician.returns'));
-        $this->assertSame(0, $equipment->fresh()->stok_tersedia);
+        $this->assertSame(1, $equipment->fresh()->stok_tersedia);
         $this->assertDatabaseHas('detail_pengembalian', [
             'id_detail' => $detail->id_detail,
-            'status_verifikasi' => 'Pending',
+            'status_verifikasi' => 'Approved',
             'id_teknisi' => $technician->id_user,
         ]);
         $admin = User::factory()->create(['role' => 'admin']);
-        $pendingReturn = \App\Models\DetailPengembalian::firstOrFail();
         $this->actingAs($admin)->get(route('admin.returns.verify'))->assertOk();
-        $this->actingAs($admin)->post(route('admin.returns.verify.approve', $pendingReturn))->assertRedirect();
-        $this->assertSame(1, $equipment->fresh()->stok_tersedia);
         $this->assertSame('Selesai', $loan->fresh()->status);
+        $this->actingAs($admin)->get('/admin/pengembalian')->assertNotFound();
         $this->actingAs($technician)->get(route('admin.equipment'))->assertForbidden();
     }
 }

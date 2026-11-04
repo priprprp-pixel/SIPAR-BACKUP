@@ -44,7 +44,7 @@ class OperationalFlowTest extends TestCase
         $this->assertSame('Pending', $otherLoan->fresh()->status);
     }
 
-    public function test_admin_and_technician_approval_queues_are_separated_by_physical_units(): void
+    public function test_admin_approves_all_requests_and_technician_receives_unit_handover_tasks(): void
     {
         $category = KategoriAlat::create(['nama_kategori' => 'Operasional']);
         $legacyEquipment = Alat::create([
@@ -74,9 +74,19 @@ class OperationalFlowTest extends TestCase
         $admin = User::factory()->create(['role' => 'admin']);
         $technician = User::factory()->create(['role' => 'teknisi']);
         $this->actingAs($admin)->get(route('admin.approvals'))
-            ->assertOk()->assertSee('Alat Legacy')->assertDontSee('Alat Unit');
-        $this->actingAs($technician)->get(route('technician.approvals'))
+            ->assertOk()->assertSee('Alat Legacy')->assertSee('Alat Unit');
+        $unitLoan = Peminjaman::whereHas('detail', fn ($query) => $query->where('id_alat', $unitEquipment->id_alat))->firstOrFail();
+        $this->actingAs($admin)->post(route('admin.approvals.approve', $unitLoan))->assertRedirect();
+        $this->assertSame('Approved', $unitLoan->fresh()->status);
+        $this->assertDatabaseHas('detail_peminjaman_item_unit', [
+            'id_detail' => $unitLoan->detail->first()->id_detail,
+            'item_unit_id' => $unitEquipment->itemUnits()->value('item_unit_id'),
+            'assigned_by' => $admin->id_user,
+        ]);
+        $this->assertDatabaseHas('item_units', ['alat_id' => $unitEquipment->id_alat, 'status' => 'Dipinjam']);
+        $this->actingAs($technician)->get(route('technician.handovers'))
             ->assertOk()->assertSee('Alat Unit')->assertDontSee('Alat Legacy');
+        $this->get('/teknisi/verifikasi')->assertNotFound();
     }
 
     public function test_unit_handover_records_the_exact_asset_id(): void

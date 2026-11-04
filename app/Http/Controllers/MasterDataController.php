@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 use App\Models\Alat;
 use App\Models\KategoriAlat;
 use App\Models\User;
-use App\Models\ItemUnit;
 use App\Exports\StudentsExport;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\RedirectResponse;
@@ -15,7 +14,6 @@ use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 use Maatwebsite\Excel\Facades\Excel;
 
@@ -29,110 +27,6 @@ class MasterDataController extends Controller
         })->orderBy('nama_alat')->paginate(15)->withQueryString();
 
         return view('admin.equipment.index', ['items' => $items, 'categories' => KategoriAlat::orderBy('nama_kategori')->get()]);
-    }
-
-    public function itemUnits(Request $request): View
-    {
-        $term = $request->string('q')->trim()->toString();
-        $units = ItemUnit::with('alat')
-            ->when($term !== '', function ($query) use ($term): void {
-                $likeTerm = '%'.$term.'%';
-                $query->where(function ($scopedQuery) use ($likeTerm): void {
-                    $scopedQuery->where('asset_id', 'like', $likeTerm)
-                        ->orWhereHas('alat', fn ($alat) => $alat->where('nama_alat', 'like', $likeTerm)->orWhere('kode_alat', 'like', $likeTerm));
-                });
-            })
-            ->orderBy('asset_id')
-            ->paginate(20)
-            ->withQueryString();
-
-        return view('admin.item-units', [
-            'units' => $units,
-            'equipment' => Alat::orderBy('nama_alat')->get(),
-            'selectedEquipment' => $term !== ''
-                ? Alat::where('kode_alat', $term)->orWhere('nama_alat', 'like', '%'.$term.'%')->first()
-                : null,
-        ]);
-    }
-
-    public function storeItemUnit(Request $request): RedirectResponse
-    {
-        $data = $request->validate([
-            'alat_id' => ['required', 'integer', 'exists:alat,id_alat'],
-            'asset_id' => ['required', 'string', 'max:80', 'unique:item_units,asset_id'],
-            'condition' => ['required', Rule::in(['Baik', 'Maintenance', 'Rusak'])],
-            'status' => ['required', Rule::in(['Tersedia', 'Dipinjam'])],
-        ]);
-        if ($data['status'] === 'Dipinjam') {
-            return back()->withErrors(['status' => 'Unit baru harus berstatus Tersedia. Status Dipinjam hanya ditetapkan saat approval teknisi.'])->withInput();
-        }
-
-        $data['qr_code'] = (string) Str::uuid();
-        DB::transaction(function () use ($data): void {
-            $equipment = Alat::whereKey($data['alat_id'])->lockForUpdate()->firstOrFail();
-            ItemUnit::create($data);
-            $equipment->syncStockFromItemUnits();
-            $equipment->save();
-        });
-
-        return back()->with('success', 'Unit fisik berhasil ditambahkan.');
-    }
-
-    public function updateItemUnit(Request $request, ItemUnit $itemUnit): RedirectResponse
-    {
-        $data = $request->validate([
-            'alat_id' => ['required', 'integer', 'exists:alat,id_alat'],
-            'asset_id' => ['required', 'string', 'max:80', Rule::unique('item_units', 'asset_id')->ignore($itemUnit->item_unit_id, 'item_unit_id')],
-            'condition' => ['required', Rule::in(['Baik', 'Maintenance', 'Rusak'])],
-            'status' => ['required', Rule::in(['Tersedia', 'Dipinjam'])],
-        ]);
-        if ($itemUnit->status === 'Dipinjam' && $data['status'] !== 'Dipinjam') {
-            return back()->withErrors(['status' => 'Unit yang sedang dipinjam hanya dapat diubah saat proses pengembalian.']);
-        }
-        if ($itemUnit->status === 'Dipinjam' && (
-            (int) $data['alat_id'] !== (int) $itemUnit->alat_id
-            || $data['asset_id'] !== $itemUnit->asset_id
-            || $data['condition'] !== $itemUnit->condition
-        )) {
-            return back()->withErrors(['status' => 'Identitas dan kondisi unit yang sedang dipinjam tidak dapat diubah.']);
-        }
-        if ($data['status'] === 'Dipinjam' && $data['condition'] !== 'Baik') {
-            return back()->withErrors(['status' => 'Unit rusak atau maintenance tidak boleh berstatus Dipinjam.'])->withInput();
-        }
-
-        DB::transaction(function () use ($itemUnit, $data): void {
-            $unit = ItemUnit::whereKey($itemUnit->item_unit_id)->lockForUpdate()->firstOrFail();
-            $oldEquipment = Alat::whereKey($unit->alat_id)->lockForUpdate()->firstOrFail();
-            if ($unit->alat_id !== (int) $data['alat_id'] && $unit->details()->exists()) {
-                throw ValidationException::withMessages(['alat_id' => 'Unit yang pernah dipinjam tidak dapat dipindahkan ke alat lain.']);
-            }
-            $unit->update($data);
-            $oldEquipment->syncStockFromItemUnits();
-            $oldEquipment->save();
-            if ($oldEquipment->id_alat !== (int) $data['alat_id']) {
-                $newEquipment = Alat::whereKey($data['alat_id'])->lockForUpdate()->firstOrFail();
-                $newEquipment->syncStockFromItemUnits();
-                $newEquipment->save();
-            }
-        });
-
-        return back()->with('success', 'Unit fisik berhasil diperbarui.');
-    }
-
-    public function deleteItemUnit(ItemUnit $itemUnit): RedirectResponse
-    {
-        if ($itemUnit->status === 'Dipinjam' || $itemUnit->details()->exists()) {
-            return back()->withErrors(['unit' => 'Unit yang sedang atau pernah dipinjam tidak dapat dihapus.']);
-        }
-        DB::transaction(function () use ($itemUnit): void {
-            $unit = ItemUnit::whereKey($itemUnit->item_unit_id)->lockForUpdate()->firstOrFail();
-            $equipment = Alat::whereKey($unit->alat_id)->lockForUpdate()->firstOrFail();
-            $unit->delete();
-            $equipment->syncStockFromItemUnits();
-            $equipment->save();
-        });
-
-        return back()->with('success', 'Unit fisik berhasil dihapus.');
     }
 
     public function storeEquipment(Request $request): RedirectResponse

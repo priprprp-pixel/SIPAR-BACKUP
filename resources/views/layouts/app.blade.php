@@ -94,7 +94,6 @@
         <a class="nav-link {{ request()->routeIs('dashboard') ? 'active' : '' }}" href="{{ route('dashboard') }}"><i class="bi bi-grid-1x2"></i>Dashboard</a>
         @if(auth()->user()->role === 'admin')
             <a class="nav-link {{ request()->routeIs('admin.equipment') ? 'active' : '' }}" href="{{ route('admin.equipment') }}"><i class="bi bi-tools"></i>Master Data Alat</a>
-            <a class="nav-link {{ request()->routeIs('admin.item-units*') ? 'active' : '' }}" href="{{ route('admin.item-units') }}"><i class="bi bi-box-seam"></i>Unit Fisik</a>
             <a class="nav-link {{ request()->routeIs('admin.categories') ? 'active' : '' }}" href="{{ route('admin.categories') }}"><i class="bi bi-collection"></i>Kategori</a>
             <a class="nav-link {{ request()->routeIs('admin.students') ? 'active' : '' }}" href="{{ route('admin.students') }}"><i class="bi bi-people"></i>Data Siswa</a>
             <a class="nav-link {{ request()->routeIs('admin.approvals') ? 'active' : '' }}" href="{{ route('admin.approvals') }}"><i class="bi bi-check2-square"></i>Verifikasi Peminjaman <span class="badge rounded-pill text-bg-warning ms-auto">{{ \App\Models\Peminjaman::where('status', 'Pending')->count() }}</span></a>
@@ -122,7 +121,6 @@
             <a class="nav-link {{ request()->routeIs('dashboard') ? 'active' : '' }}" href="{{ route('dashboard') }}"><i class="bi bi-grid-1x2"></i>Dashboard</a>
             @if(auth()->user()->role === 'admin')
                 <a class="nav-link {{ request()->routeIs('admin.equipment') ? 'active' : '' }}" href="{{ route('admin.equipment') }}"><i class="bi bi-tools"></i>Master Data Alat</a>
-                <a class="nav-link {{ request()->routeIs('admin.item-units*') ? 'active' : '' }}" href="{{ route('admin.item-units') }}"><i class="bi bi-box-seam"></i>Unit Fisik</a>
                 <a class="nav-link {{ request()->routeIs('admin.categories') ? 'active' : '' }}" href="{{ route('admin.categories') }}"><i class="bi bi-collection"></i>Kategori</a>
                 <a class="nav-link {{ request()->routeIs('admin.students') ? 'active' : '' }}" href="{{ route('admin.students') }}"><i class="bi bi-people"></i>Data Siswa</a>
                 <a class="nav-link {{ request()->routeIs('admin.approvals') ? 'active' : '' }}" href="{{ route('admin.approvals') }}"><i class="bi bi-check2-square"></i>Verifikasi Peminjaman <span class="badge rounded-pill text-bg-warning ms-auto">{{ \App\Models\Peminjaman::where('status', 'Pending')->count() }}</span></a>

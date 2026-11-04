@@ -36,10 +36,6 @@ Route::middleware('auth')->group(function () {
 
     Route::prefix('admin')->name('admin.')->middleware('role:admin')->group(function () {
         Route::get('/alat', [MasterDataController::class, 'equipment'])->name('equipment');
-        Route::get('/unit-alat', [MasterDataController::class, 'itemUnits'])->name('item-units');
-        Route::post('/unit-alat', [MasterDataController::class, 'storeItemUnit'])->name('item-units.store');
-        Route::put('/unit-alat/{itemUnit}', [MasterDataController::class, 'updateItemUnit'])->name('item-units.update');
-        Route::delete('/unit-alat/{itemUnit}', [MasterDataController::class, 'deleteItemUnit'])->name('item-units.delete');
         Route::post('/alat', [MasterDataController::class, 'storeEquipment'])->name('equipment.store');
         Route::put('/alat/{alat}', [MasterDataController::class, 'updateEquipment'])->name('equipment.update');
         Route::delete('/alat/{alat}', [MasterDataController::class, 'deleteEquipment'])->name('equipment.delete');

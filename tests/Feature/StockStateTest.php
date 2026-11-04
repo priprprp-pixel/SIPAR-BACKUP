@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\Alat;
 use App\Models\KategoriAlat;
+use App\Models\Peminjaman;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
@@ -59,6 +60,32 @@ class StockStateTest extends TestCase
             ->assertOk()
             ->assertSee('equipment-photo-placeholder');
         $this->assertDatabaseHas('alat', ['id_alat' => $equipment->id_alat, 'foto' => 'alat/missing.jpg']);
+    }
+
+    public function test_loan_history_uses_the_uploaded_equipment_photo(): void
+    {
+        Storage::fake('public');
+        Storage::disk('public')->put('alat/router.jpg', 'photo');
+        $category = KategoriAlat::create(['nama_kategori' => 'Jaringan']);
+        $equipment = Alat::create([
+            'kode_alat' => 'PHOTO-HISTORY', 'nama_alat' => 'Router Foto', 'id_kategori' => $category->id_kategori,
+            'stok_total' => 1, 'stok_tersedia' => 0, 'kondisi' => 'Baik', 'foto' => 'alat/router.jpg',
+            'qr_code' => 'qr-photo-history', 'status_alat' => 'Dipinjam',
+        ]);
+        $student = User::factory()->create(['role' => 'siswa']);
+        $loan = Peminjaman::create([
+            'id_user' => $student->id_user,
+            'tanggal_pinjam' => now()->toDateString(),
+            'tanggal_kembali_rencana' => now()->addDay()->toDateString(),
+            'keperluan' => 'Uji foto riwayat',
+            'status' => 'Approved',
+        ]);
+        $loan->detail()->create(['id_alat' => $equipment->id_alat, 'jumlah' => 1]);
+
+        $this->actingAs($student)->get(route('loans.mine'))
+            ->assertOk()
+            ->assertSee('/storage/alat/router.jpg')
+            ->assertSee('onerror="this.hidden=true;this.nextElementSibling.hidden=false"', false);
     }
 
     public function test_marking_equipment_for_maintenance_preserves_borrowed_count_and_can_restore_stock(): void

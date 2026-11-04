@@ -30,7 +30,7 @@ class LoanWorkflowTest extends TestCase
         $this->assertSame(2, $equipment->fresh()->stok_tersedia);
     }
 
-    public function test_student_can_submit_a_single_item_request_from_the_catalog_modal(): void
+    public function test_student_can_submit_one_equipment_item_from_the_catalog_modal(): void
     {
         $category = KategoriAlat::create(['nama_kategori' => 'Jaringan']);
         $equipment = Alat::create([
@@ -41,7 +41,7 @@ class LoanWorkflowTest extends TestCase
 
         $this->actingAs($student)->post(route('loans.create'), [
             'id_alat' => $equipment->id_alat,
-            'jumlah' => 2,
+            'jumlah' => 1,
             'tanggal_pinjam' => now()->toDateString(),
             'tanggal_kembali_rencana' => now()->addDays(2)->toDateString(),
             'keperluan' => 'Praktik hasil scan QR',
@@ -51,10 +51,42 @@ class LoanWorkflowTest extends TestCase
         $this->assertDatabaseHas('detail_peminjaman', [
             'id_peminjaman' => $loan->id_peminjaman,
             'id_alat' => $equipment->id_alat,
-            'jumlah' => 2,
+            'jumlah' => 1,
         ]);
         $this->assertSame('Pending', $loan->status);
         $this->assertSame(3, $equipment->fresh()->stok_tersedia);
+    }
+
+    public function test_student_cannot_request_multiple_units_or_equipment_in_one_loan(): void
+    {
+        $category = KategoriAlat::create(['nama_kategori' => 'Jaringan']);
+        $firstEquipment = Alat::create([
+            'kode_alat' => 'ONE-UNIT-A', 'nama_alat' => 'Alat Satu', 'id_kategori' => $category->id_kategori,
+            'stok_total' => 3, 'stok_tersedia' => 3, 'kondisi' => 'Baik', 'qr_code' => 'one-unit-a', 'status_alat' => 'Tersedia',
+        ]);
+        $secondEquipment = Alat::create([
+            'kode_alat' => 'ONE-UNIT-B', 'nama_alat' => 'Alat Dua', 'id_kategori' => $category->id_kategori,
+            'stok_total' => 3, 'stok_tersedia' => 3, 'kondisi' => 'Baik', 'qr_code' => 'one-unit-b', 'status_alat' => 'Tersedia',
+        ]);
+        $student = User::factory()->create(['role' => 'siswa']);
+        $request = [
+            'tanggal_pinjam' => now()->toDateString(),
+            'tanggal_kembali_rencana' => now()->addDays(2)->toDateString(),
+            'keperluan' => 'Praktik',
+        ];
+
+        $this->actingAs($student)->post(route('loans.create'), $request + [
+            'items' => [['id_alat' => $firstEquipment->id_alat, 'jumlah' => 2]],
+        ])->assertSessionHasErrors('items.0.jumlah');
+
+        $this->post(route('loans.create'), $request + [
+            'items' => [
+                ['id_alat' => $firstEquipment->id_alat, 'jumlah' => 1],
+                ['id_alat' => $secondEquipment->id_alat, 'jumlah' => 1],
+            ],
+        ])->assertSessionHasErrors('items');
+
+        $this->assertSame(0, Peminjaman::count());
     }
 
     public function test_student_cannot_request_the_same_equipment_until_active_request_is_closed(): void
@@ -92,7 +124,7 @@ class LoanWorkflowTest extends TestCase
         $this->assertSame(2, Peminjaman::count());
     }
 
-    public function test_student_request_admin_approval_and_late_return_update_stock_and_fine(): void
+    public function test_admin_approval_and_late_return_update_stock_and_fine_for_existing_multi_item_loan(): void
     {
         $now = Carbon::now()->addDays(3)->setTime(12, 0);
         $this->travelTo($now);
@@ -108,17 +140,17 @@ class LoanWorkflowTest extends TestCase
         $student = User::factory()->create(['role' => 'siswa']);
         $admin = User::factory()->create(['role' => 'admin']);
 
-        $this->actingAs($student)->post(route('loans.create'), [
-            'items' => [
-                ['id_alat' => $equipment->id_alat, 'jumlah' => 2],
-                ['id_alat' => $secondEquipment->id_alat, 'jumlah' => 1],
-            ],
+        $loan = Peminjaman::create([
+            'id_user' => $student->id_user,
             'tanggal_pinjam' => $now->toDateString(),
             'tanggal_kembali_rencana' => $now->copy()->addDay()->toDateString(),
             'keperluan' => 'Praktik jaringan kelas XI RPL',
-        ])->assertRedirect(route('loans.mine'));
-
-        $loan = Peminjaman::firstOrFail();
+            'status' => 'Pending',
+        ]);
+        $loan->detail()->createMany([
+            ['id_alat' => $equipment->id_alat, 'jumlah' => 2],
+            ['id_alat' => $secondEquipment->id_alat, 'jumlah' => 1],
+        ]);
         $this->assertSame('Pending', $loan->status);
         $this->assertSame(3, $equipment->fresh()->stok_tersedia);
         $this->assertSame(2, $secondEquipment->fresh()->stok_tersedia);

@@ -68,7 +68,7 @@ Siswa juga dapat mendaftar sendiri melalui halaman masuk. Pendaftaran publik han
 
 - Admin: dashboard, CRUD alat/kategori/akun siswa, approval/tolak seluruh pengajuan, verifikasi pengembalian lama yang masih berstatus menunggu, dan laporan. Persetujuan alat ber-Asset ID mengunci unit tersedia untuk proses penyerahan.
 - Teknisi: menerima tugas setelah pengajuan Admin disetujui, mencatat penyerahan dan penerimaan fisik dengan bukti foto kamera, memperbarui stok saat pengembalian dicatat, serta melihat counter tugas operasional.
-- Siswa: katalog dan pencarian kode alat, pengajuan dengan validasi stok (tetap wajib login), status/riwayat, profil, serta perubahan password.
+- Siswa: katalog dan pencarian kode alat, pengajuan satu alat dengan jumlah maksimal satu per transaksi (tetap wajib login), status/riwayat, profil, serta perubahan password.
 - Stok baru berkurang saat admin menyetujui pengajuan. Stok dikunci dan diperiksa ulang dalam transaksi database saat pengajuan diproses. Jumlah total direkonsiliasi sebagai tersedia, maintenance, rusak, dan sedang dipinjam.
 - Pengembalian dicatat per alat dan jumlah, sehingga satu transaksi multi-alat dapat dikembalikan bertahap. Status transaksi menjadi `Selesai` setelah seluruh jumlah item kembali. Kondisi `Baik` mengembalikan unit ke stok tersedia, `Rusak` memindahkan unit ke stok maintenance, dan `Hilang` mengurangi stok total. Denda keterlambatan Rp 5.000 per hari dibagi proporsional menurut jumlah item transaksi, dengan koreksi pembulatan saat item terakhir kembali.
 - `Export Excel (.xlsx)` menghasilkan workbook Excel asli melalui Laravel Excel. `Unduh PDF` menghasilkan laporan PDF dari server.

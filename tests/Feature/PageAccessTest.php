@@ -66,6 +66,7 @@ class PageAccessTest extends TestCase
         }
         $this->get(route('catalog'))
             ->assertSee('id="loan-modal-form"', false)
+            ->assertSee('name="items[0][jumlah]" min="1" max="1" value="1" readonly', false)
             ->assertSee('Kirim pengajuan');
     }
 

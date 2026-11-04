@@ -36,9 +36,9 @@ class LoanController extends Controller
         }
 
         $data = $request->validate([
-            'items' => ['required', 'array', 'min:1', 'max:30'],
+            'items' => ['required', 'array', 'min:1', 'max:1'],
             'items.*.id_alat' => ['required', 'integer', 'distinct', 'exists:alat,id_alat'],
-            'items.*.jumlah' => ['required', 'integer', 'min:1', 'max:100'],
+            'items.*.jumlah' => ['required', 'integer', 'in:1'],
             'tanggal_pinjam' => ['required', 'date', 'after_or_equal:today', 'before_or_equal:today'],
             'tanggal_kembali_rencana' => ['required', 'date', 'after_or_equal:tanggal_pinjam', 'before_or_equal:'.now()->addDays(5)->toDateString()],
             'keperluan' => ['required', 'string', 'max:2000'],

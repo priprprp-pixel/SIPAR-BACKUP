@@ -22,6 +22,7 @@ Route::middleware('guest')->group(function () {
 Route::middleware('auth')->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     Route::get('/cari', [SearchController::class, 'index'])->name('search');
+    Route::get('/cari/suggestions', [SearchController::class, 'suggestions'])->name('search.suggestions');
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
     Route::get('/profil', [AuthController::class, 'profile'])->name('profile');
     Route::put('/profil', [AuthController::class, 'updateProfile'])->name('profile.update');

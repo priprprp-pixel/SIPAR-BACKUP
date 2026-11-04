@@ -48,6 +48,16 @@
         .export-action-pdf .bi{color:#bd3d4a}
         .topbar-search button{position:absolute;top:4px;right:4px;width:34px;height:34px;padding:0;display:grid;place-items:center}
         .topbar-search button .bi{position:static;left:auto;top:auto;color:inherit;font-size:14px;line-height:1}
+        .topbar-search{position:absolute;left:50%;transform:translateX(-50%);width:min(600px,46vw);z-index:3}
+        .search-suggestions{position:absolute;top:calc(100% + 8px);left:0;right:0;display:none;max-height:420px;overflow-y:auto;background:#fff;border:1px solid var(--line);border-radius:8px;box-shadow:0 12px 28px rgba(16,35,52,.16);padding:6px;z-index:30}
+        .search-suggestions.is-visible{display:block}
+        .search-suggestion{display:flex;align-items:center;gap:10px;width:100%;padding:9px 10px;border:0;border-radius:6px;background:#fff;color:var(--ink);text-align:left;text-decoration:none}
+        .search-suggestion:hover,.search-suggestion:focus{background:var(--blue-soft);outline:0}
+        .search-suggestion-icon{display:grid;place-items:center;width:30px;height:30px;flex:none;border-radius:7px;background:var(--blue-soft);color:var(--blue)}
+        .search-suggestion-type{display:block;color:var(--muted);font-size:10px;text-transform:uppercase;letter-spacing:.04em}
+        .search-suggestion-title{display:block;font-size:12px;font-weight:700}
+        .search-suggestion-subtitle{display:block;color:var(--muted);font-size:10px}
+        .search-suggestion-empty{padding:12px;color:var(--muted);font-size:12px;text-align:center}
         .topbar-avatar{display:grid;width:34px;height:34px;flex:none;place-items:center;border-radius:50%;background:#e8f2ff;color:#0868ce}
         .topbar-avatar .bi{font-size:17px;line-height:1}
         .approval-card-header{flex-wrap:wrap}
@@ -69,7 +79,7 @@
             .workspace{margin-left:0}
             .mobile-nav-toggle{display:grid}
             .topbar{padding-right:16px;padding-left:16px;gap:10px}
-            .topbar-search{width:auto;flex:1}
+            .topbar-search{position:relative;left:auto;transform:none;width:auto;flex:1}
         }
         @media(max-width:575.98px){
             .topbar{padding-right:12px;padding-left:12px;gap:8px}
@@ -144,9 +154,10 @@
     <main class="workspace">
         <header class="topbar">
             <button class="mobile-nav-toggle" type="button" data-bs-toggle="offcanvas" data-bs-target="#mobileNavigation" aria-controls="mobileNavigation" aria-label="Buka navigasi"><i class="bi bi-list"></i></button>
-            <form class="topbar-search" method="get" action="{{ request()->routeIs('catalog') ? route('catalog') : route('search') }}" role="search">
+            <form class="topbar-search" method="get" action="{{ request()->routeIs('catalog') ? route('catalog') : route('search') }}" role="search" autocomplete="off">
                 <input class="form-control form-control-sm" type="search" name="q" value="{{ request('q') }}" placeholder="{{ request()->routeIs('catalog') ? 'Cari nama atau kode alat...' : 'Cari alat, transaksi, atau siswa...' }}" aria-label="Cari">
                 <button class="btn btn-primary" type="submit" aria-label="Cari"><i class="bi bi-search"></i></button>
+                <div class="search-suggestions" id="search-suggestions" role="listbox" aria-label="Saran pencarian"></div>
             </form>
             <div class="topbar-meta"><i class="bi bi-calendar3"></i><span>{{ now()->translatedFormat('d M Y') }}</span><a class="topbar-profile" href="{{ route('profile') }}" aria-label="Buka profil saya"><span class="topbar-name">{{ auth()->user()->nama }}</span><span class="topbar-avatar" aria-hidden="true"><i class="bi bi-person-fill"></i></span></a></div>
         </header>
@@ -162,5 +173,72 @@
 @endif
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 @stack('scripts')
+@if(auth()->check())
+<script>
+(() => {
+    const form = document.querySelector('.topbar-search');
+    const input = form?.querySelector('input[name="q"]');
+    const suggestions = document.getElementById('search-suggestions');
+    if (!form || !input || !suggestions) return;
+
+    let timer;
+    let controller;
+    const iconByType = {Alat: 'bi-tools', Kategori: 'bi-collection', Transaksi: 'bi-arrow-left-right', Siswa: 'bi-person'};
+    const closeSuggestions = () => {
+        suggestions.classList.remove('is-visible');
+        suggestions.replaceChildren();
+    };
+    const renderSuggestions = (results) => {
+        suggestions.replaceChildren();
+        if (!results.length) {
+            const empty = document.createElement('div');
+            empty.className = 'search-suggestion-empty';
+            empty.textContent = 'Tidak ada hasil yang cocok.';
+            suggestions.append(empty);
+        } else {
+            results.forEach(result => {
+                const link = document.createElement('a');
+                link.className = 'search-suggestion';
+                link.href = result.url;
+                link.setAttribute('role', 'option');
+                link.innerHTML = `<span class="search-suggestion-icon"><i class="bi ${iconByType[result.type] || 'bi-search'}"></i></span><span><span class="search-suggestion-type">${result.type}</span><span class="search-suggestion-title"></span><span class="search-suggestion-subtitle"></span></span>`;
+                link.querySelector('.search-suggestion-title').textContent = result.title;
+                link.querySelector('.search-suggestion-subtitle').textContent = result.subtitle;
+                suggestions.append(link);
+            });
+        }
+        suggestions.classList.add('is-visible');
+    };
+    const loadSuggestions = async () => {
+        const query = input.value.trim();
+        if (query.length < 2) {
+            closeSuggestions();
+            return;
+        }
+        controller?.abort();
+        controller = new AbortController();
+        try {
+            const response = await fetch(`{{ route('search.suggestions') }}?q=${encodeURIComponent(query)}`, {
+                headers: {'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest'},
+                signal: controller.signal,
+            });
+            if (!response.ok) throw new Error('Pencarian gagal dimuat.');
+            const data = await response.json();
+            if (input.value.trim() === query) renderSuggestions(data.results || []);
+        } catch (error) {
+            if (error.name !== 'AbortError') closeSuggestions();
+        }
+    };
+    input.addEventListener('input', () => {
+        clearTimeout(timer);
+        timer = setTimeout(loadSuggestions, 250);
+    });
+    input.addEventListener('focus', loadSuggestions);
+    document.addEventListener('click', event => {
+        if (!form.contains(event.target)) closeSuggestions();
+    });
+})();
+</script>
+@endif
 </body>
 </html>

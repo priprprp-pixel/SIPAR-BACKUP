@@ -67,4 +67,26 @@ class SearchTest extends TestCase
                 && ! $loans->contains('id_peminjaman', $otherLoan->id_peminjaman))
             ->assertViewHas('students', fn ($students) => $students->isEmpty());
     }
+
+    public function test_global_search_suggestions_return_equipment_categories_and_admin_students(): void
+    {
+        $admin = User::factory()->create(['role' => 'admin']);
+        $student = User::factory()->create([
+            'role' => 'siswa',
+            'nama' => 'Autocomplete Student',
+            'nis_nip' => 'AUTO-001',
+        ]);
+        $category = KategoriAlat::create(['nama_kategori' => 'Autocategory']);
+        Alat::create([
+            'kode_alat' => 'AUTO-TOOL', 'nama_alat' => 'Autocomplete Tool', 'id_kategori' => $category->id_kategori,
+            'stok_total' => 1, 'stok_tersedia' => 1, 'kondisi' => 'Baik', 'qr_code' => 'qr-auto-tool', 'status_alat' => 'Tersedia',
+        ]);
+
+        $response = $this->actingAs($admin)->getJson(route('search.suggestions', ['q' => 'AUTO']));
+
+        $response->assertOk()
+            ->assertJsonPath('results.0.type', 'Alat')
+            ->assertJsonFragment(['type' => 'Kategori', 'title' => 'Autocategory'])
+            ->assertJsonFragment(['type' => 'Siswa', 'title' => 'Autocomplete Student']);
+    }
 }
